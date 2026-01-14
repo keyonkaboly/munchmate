@@ -1,4 +1,4 @@
-# munchmate
+# MunchMate
 ## COSC 315 Project
 #### Keyon Kaboly, Alexander Yong, Karam Hammouda, Marcus Morales
 
