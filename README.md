@@ -4,6 +4,13 @@
 
 It should be noted we are using this dataset for food delivery information in our project: https://www.kaggle.com/datasets/niszarkiah/food-deliveryLinks.
 
+## Fill out later:
+Explain how to build/run the project in this ReadMe. delete everything below this before doing so (for end of project).
+
+
+
+
+## Delete Below before end of project:
 ##### General Requirements
 The project must include the following characteristics and functionalities:
 
