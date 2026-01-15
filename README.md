@@ -1,5 +1,5 @@
 # MunchMate
-## COSC 315 Project
+## COSC 310 Project
 #### Keyon Kaboly, Alexander Yong, Karam Hammouda, Marcus Morales
 
 It should be noted we are using this dataset for food delivery information in our project: https://www.kaggle.com/datasets/niszarkiah/food-deliveryLinks.
