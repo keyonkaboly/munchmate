@@ -1,0 +1,8 @@
+Meeting Minutes (January 17th 5-9pm):
+
+    - Created a planning process
+    - Discuss roles and what needed to be completed this week
+    - Assigned core features to each member
+    - Set up the github repository with labels, kanban board skeleton and traceability matrix
+    - Discussed about project possibilities, nonfunctional requirements, examples of functional requirements
+    - Because the coding process has not started we do not have proper scrum planning or retrospectives. 
