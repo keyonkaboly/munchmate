@@ -1,0 +1,6 @@
+Meeting Minutes (January 23rd 3:30-5pm):
+
+    - Each person finished their system/software requirements and user stories for their core features.
+    - We had a group presentation and discussion on proper programming techinques, creating branches + git commands, pull request templates, etc.
+    - The meeting was mostly a group work session.
+    - Finished all of Milestone 1, finished backlog on kanban board, finished traceability matrix. Fixed formatting for document. Plan on submitting M1 on Jan24 or Jan25.
