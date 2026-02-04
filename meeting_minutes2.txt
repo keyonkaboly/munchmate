@@ -1,0 +1,4 @@
+Meeting Minutes: 30/1/25
+- we shared our prelabs with each other and completed the use diagram together
+- we started sequence and activity diagram
+- we split up the work for the  week for each member
