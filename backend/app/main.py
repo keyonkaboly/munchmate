@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from app.api import authorization
-from app.db.database import Base, engine
+from app.presentation.api.v1 import authorization
+from app.infrastructure.db.database import Base, engine
 
 app = FastAPI(title="munchmate")
 
