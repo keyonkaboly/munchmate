@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.db.models import Customer
-from app.helpers.security import hash_password, verify_password
+from app.infrastructure.db.models import Customer
+from app.infrastructure.security.security import hash_password, verify_password
 
 def create_customer(db: Session, username: str, email: str, password: str):
     customer = Customer(username=username, email=email, password_hash=hash_password(password))
