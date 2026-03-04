@@ -30,7 +30,7 @@ jobs:
           pip install -r backend/envDependencies.txt
           pip install pytest
 
-      - name: Run tests 
-        working-directory: ./backend
+      - name: Run tests
+        working-directory: ./
         run: |
-          pytest ../tests/unit -v --tb=short
+          pytest tests/unit -v --tb=short
