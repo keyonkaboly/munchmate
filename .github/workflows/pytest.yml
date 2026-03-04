@@ -1,0 +1,31 @@
+name: Pytest Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    # Ubuntu is optimal for tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4 # checkout@v4 pulls repo
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4 # installs python 3.12
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies # installs dependencies incl. in our repo
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/envDependencies.txt
+          pip install pytest
+
+      - name: Run tests 
+        working-directory: ./backend
+        run: | # verbose and short error msgs
+          pytest ../tests/unit -v --tb=short
