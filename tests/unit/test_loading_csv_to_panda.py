@@ -1,7 +1,7 @@
 import pandas as panda
 import pytest
 
-from app.data.dataset_loader import load_csv
+from backend.app.data.dataset_loader import load_csv
 
 # Note pytest has built in tmp_path that must be used
 
