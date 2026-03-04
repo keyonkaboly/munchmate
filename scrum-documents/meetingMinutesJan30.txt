@@ -1,11 +1,4 @@
-<<<<<<< HEAD
-Meeting Minutes: 30/1/25
-- we shared our prelabs with each other and completed the use diagram together
-- we started sequence and activity diagram
-- we split up the work for the  week for each member
-=======
 Meeting Minutes: 1/30/25
 - We shared our prelabs with each other and completed the use diagram together
 - We started sequence and activity diagram
 - We split up the work for the week for each member
->>>>>>> 55fe3b56ce6b34dbac9a715561a28fdfa478c8d9
