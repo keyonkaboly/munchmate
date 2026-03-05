@@ -1,6 +1,7 @@
+'''
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.infrastructure.db.database import get_db
+from app.infrastructure.database.database import get_db
 from app.application.services.authorization_service import create_customer, validate_customer
 
 router = APIRouter(prefix="/authorization", tags=["authorization"])
@@ -18,3 +19,6 @@ def login(username: str, password: str, db: Session = Depends(get_db)):
     if not customer:
         raise HTTPException(status_code=401, detail="Invalid login info")
     return {"message": "Login successful. Customer:", "customer_id": customer.id}
+
+
+'''
