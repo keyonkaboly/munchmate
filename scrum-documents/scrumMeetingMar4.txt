@@ -1,0 +1,16 @@
+Date: March 4, 2026
+Sprint #: 2
+
+1. What did we push since the last meeting?
+    - Pushed the pytest set up yaml and ini. Hooked up to github actions, works now per commit on a PR it’ll run the tests.
+    - Pushed changes for grabbing dataset from kaggle and putting into panda. Test made for this just testing scanning a directory for a .csv and grabbing the text from inside the .csv.
+    - Pushed changed for docker compose file for backend/frontend
+    - Compromised and fixed bugfixes for dependencies
+    - Created a test case for user model which tests whether the user writes in the right email format, password length, and doesn't repeat usernames
+
+
+2. What are we working on for this sprint?
+    - Add restaurant info and set up FastAPI to run the API service
+    - Implement the RestaurantService layer to handle business logic
+    - Furthering grabbing the text from the dataset and putting into structured format to grab restaurant names for example, locations etc. and Maintain Data Integrity, Feature 2 stuff
+    - Validating restaurant IDs
