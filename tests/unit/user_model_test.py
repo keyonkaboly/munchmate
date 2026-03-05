@@ -1,12 +1,24 @@
 import pytest
-from backend.app.presentation.api.routers.users import router
 from fastapi.testclient import TestClient
+from app.presentation.api.routers.users import router
 from fastapi import FastAPI
-from app.main import app
+from app.infrastructure.database.database import Base, engine
 
+app = FastAPI()
+app.include_router(router)
+client = TestClient(app) # simulate the api calls to the app
 
-client = TestClient(app) #simulate the api calls to the router
-
+@pytest.fixture(autouse=True) #its true so it runs before every test
+def reset_datbase():
+    #drop all tables
+    Base.metadata.drop_all(bind=engine)
+    
+    #recreate tables
+    Base.metadata.create_all(bind=engine)
+    
+    yield
+    
+    
 def test_create_user_success():
     user_payload = {
         "email": "testuser@example.com",

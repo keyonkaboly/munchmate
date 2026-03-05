@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends
-from app.presentation.api.user_schemas import UserCreate, UserLogin, UserResponse
+from fastapi import APIRouter, Depends, HTTPException
+from backend.app.presentation.schemas.user_schemas import UserCreate, UserLogin, UserResponse
 from app.infrastructure.database.models import Customer
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from app.infrastructure.database.database import get_db
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -17,15 +18,17 @@ def create_user(
     new_user = Customer(
         email=user.email,
         username=user.username,
-        password=user.password, #this temproy for now 
+        password_hash=user.password, #this temporary for now 
     )
     
     db.add(new_user) #adds the new user to the database session
-    db.commit() #commits the changes to the database
+    
+    try:
+        db.commit() #commits the changes to the database
+        db.refresh(new_user) #refreshes the new user instance with the data from the database
+    except IntegrityError: #raised when a database rule is violated
+        db.rollback() #rolls back the changes to the database if there is an integrity error (e.g. duplicate email or username)
+        raise HTTPException(status_code=400, detail="Email or username already exists") #400=bad request
+    
     
     return new_user
-
-    
-
-
-    

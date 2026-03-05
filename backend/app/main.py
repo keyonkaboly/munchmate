@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from app.presentation.api.v1 import authorization
-from app.infrastructure.db.database import Base, engine
+from app.presentation.api.routers.users import router
+from app.infrastructure.database.database import Base, engine
+
 
 app = FastAPI(title="munchmate")
 
@@ -8,7 +10,8 @@ app = FastAPI(title="munchmate")
 Base.metadata.create_all(bind=engine)
 
 # Include routers
-app.include_router(authorization.router)
+#app.include_router(authorization.router)
+app.include_router(router)
 
 # Creates endpoint
 @app.get("/")
