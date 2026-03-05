@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String
 from .database import Base
 
-class Custaomer(Base):
+class Customer(Base):
     __tablename__ = "customers"
 
     # Passwords can be the same, but usernames and emails must be unique
