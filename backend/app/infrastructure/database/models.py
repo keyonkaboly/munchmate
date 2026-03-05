@@ -13,21 +13,21 @@ class Customer(Base):
     password_hash = Column(String, nullable=False)
 
 
-# Restaurant model - straightforward
+# Restaurant table definition
 class Restaurant(Base):
     __tablename__ = "restaurants"
     
     id = Column(Integer, primary_key=True, index=True)
-    # TODO: might want to add more fields later like name, address, etc.
+    # probably should add name, location fields here at some point
 
 
-# Menu items for each restaurant
 class MenuItem(Base):
     __tablename__ = "menu_items"
     
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)  # item name like "Burger" or whatever
-    restaurant_id = Column(Integer, nullable=False)
+    # Using composite primary key here - name + restaurant_id together
+    name = Column(String, primary_key=True)
+    restaurant_id = Column(Integer, primary_key=True)
     
-    # Note: Should probably add a ForeignKey here eventually to link to Restaurant
-    # Something like: ForeignKey("restaurants.id") but keeping it simple for now
+    # This means each restaurant can have items with same name
+    # but the combination of name+restaurant_id must be unique
+    # Not sure if this is the best approach tbh, might want to reconsider using an id field instead
