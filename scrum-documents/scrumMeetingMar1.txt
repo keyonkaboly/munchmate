@@ -1,0 +1,12 @@
+Date: March 1, 2026
+Sprint #: 1
+
+1. What are we working on for this sprint?
+    - Must fix folder structure following Layered Architecture and Class Diagram
+    - Grab dataset and put into panda dataframe library
+    - Set up pytest yaml and ini files
+    - Set up docker compose file for backend and frontend
+    - Created the User database model file containing id, username, email, and password fields. 
+    - Created a separate user schema file with Pydantic models to handle input validation and response formatting.
+    - Created a user schemas which defines the usercreate, userlogin and userresponse
+    - Created a router post for create_user so a user can create an account
