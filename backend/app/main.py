@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from app.presentation.api.v1 import authorization
+from app.presentation.api.v1 import restaurants
 from app.infrastructure.db.database import Base, engine
 
 app = FastAPI(title="munchmate")
@@ -9,6 +10,9 @@ Base.metadata.create_all(bind=engine)
 
 # Include routers
 app.include_router(authorization.router)
+
+# Include restaunrant router after authorization, making sure auth is checked before getting access to the resstaurant endpoints
+app.include_router(restaurants.router)             
 
 # Creates endpoint
 @app.get("/")
