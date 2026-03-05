@@ -28,3 +28,8 @@ def load_csv(dataset_path: str) -> panda.DataFrame:
     csv_path = os.path.join(dataset_path, csv_files[0])
     # Note: read_csv uses commas to separate data
     return panda.read_csv(csv_path)
+
+# Downloads dataset and loads the first csv file as a DataFrame (panda)
+def load_dataset() -> panda.DataFrame:
+    dataset_path = download_dataset()
+    return load_csv(dataset_path)
