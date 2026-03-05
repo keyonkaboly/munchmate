@@ -11,3 +11,23 @@ class Customer(Base):
     username = Column(String, unique=True, nullable=False)
     email = Column(String, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
+
+
+# Restaurant table definition
+class Restaurant(Base):
+    __tablename__ = "restaurants"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    # probably should add name, location fields here at some point
+
+
+class MenuItem(Base):
+    __tablename__ = "menu_items"
+    
+    # Using composite primary key here - name + restaurant_id together
+    name = Column(String, primary_key=True)
+    restaurant_id = Column(Integer, primary_key=True)
+    
+    # This means each restaurant can have items with same name
+    # but the combination of name+restaurant_id must be unique
+    # Not sure if this is the best approach tbh, might want to reconsider using an id field instead
