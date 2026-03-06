@@ -1,7 +1,7 @@
 """Module for restaurant and menu item validation routes."""
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.db.database import get_db
+from app.infrastructure.database.database import get_db
 from app.infrastructure.database.models import Restaurant, MenuItem
 
 # Create router for restaurant endpoints
