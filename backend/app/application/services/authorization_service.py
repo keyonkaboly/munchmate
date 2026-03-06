@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.infrastructure.db.models import Customer
+from app.infrastructure.database.models import Customer
 from app.infrastructure.security.security import hash_password, verify_password
 
 def create_customer(db: Session, username: str, email: str, password: str):
@@ -17,7 +17,7 @@ def validate_customer(db: Session, username: str, password: str):
     if not customer:
         return None
     
-    if not verify_password(password, Customer.password_hash):
+    if not verify_password(password, customer.password_hash):
         return None
     
     return customer

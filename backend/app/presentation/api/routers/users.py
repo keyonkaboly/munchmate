@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from backend.app.presentation.schemas.user_schemas import UserCreate, UserLogin, UserResponse
+from app.presentation.schemas.user_schemas import UserCreate, UserLogin, UserResponse
 from app.infrastructure.database.models import Customer
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
