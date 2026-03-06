@@ -28,6 +28,5 @@ class MenuItem(Base):
     name = Column(String, primary_key=True)
     restaurant_id = Column(Integer, primary_key=True)
     
-    # This means each restaurant can have items with same name
+    # means each restaurant can have items with same name
     # but the combination of name+restaurant_id must be unique
-    # Not sure if this is the best approach tbh, might want to reconsider using an id field instead

@@ -3,11 +3,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
-<<<<<<< HEAD
-from app.db.database import get_db
-=======
 from app.infrastructure.database.database import get_db
->>>>>>> 59fbfca80600ba57e1f329424e8edd0283c9c67e
 from app.infrastructure.database.models import Base, Restaurant, MenuItem
 
 
@@ -38,8 +34,8 @@ app.dependency_overrides[get_db] = override_get_db
 @pytest.fixture(autouse=True)
 def setup_database():
 
-    #Create tables and seed test data before each test, drop after.
-    #I usually prefer this approach to keep tests isolated
+    #make  tables before each test, then drop after
+    #I did this to keep tests isolated
 
     Base.metadata.create_all(bind=engine)
 
@@ -79,18 +75,18 @@ def test_valid_restaurant_id():
 
 def test_invalid_restaurant_id():
 
-    #Check that an invalid restaurant ID returns 404.
-    #This should handle the case where restaurant doesn't exist
+    # check that an invalid restaurant ID returns 404.
+    # if the restaurant dont exist, this should handle it 
 
-    response = client.get("/restaurants/999")  # Using 999 as non-existent ID
+    response = client.get("/restaurants/999")  # using 999 as non-existent ID
 
     assert response.status_code == 404
 
 
 def test_valid_menu_item_for_restaurant():
 
-    #Check that a valid food item at the correct restaurant returns 200.
-    #Let's make sure the menu item retrieval works properly
+    #here check that a valid food item at the correct restaurant returns 200
+    #make sure the menu item retrieval works properly
 
     response = client.get("/restaurants/1/menu-items/Pizza")
 
@@ -103,10 +99,10 @@ def test_valid_menu_item_for_restaurant():
 
 def test_invalid_menu_item_for_restaurant():
 
-    #Check that a food item not at the restaurant returns 404.
-    #Edge case: requesting an item that doesn't exist at this restaurant
+    #another check if food item not at the restaurant, so then it returns 404
+    #requesting an item that doesn't exist at this restaurant - that would be the edge case here
 
     response = client.get("/restaurants/1/menu-items/Sushi")
 
-    # Should return 404 since Sushi isn't on the menu for restaurant 1
+    # returns 404 since Sushi isn't on the menu for restaurant 1
     assert response.status_code == 404
