@@ -20,8 +20,6 @@ jobs:
         pip install pylint
         pip install -r backend/envDependencies.txt
 
-    - name: Analysing the code with pylint
-      env:
-        PYTHONPATH: ${{ github.workspace }}/backend
+    - name: Run pylint
       run: |
-        pylint --disable=C,R,W $(git ls-files '*.py')
+        pylint backend --score=y
