@@ -18,6 +18,9 @@ class Restaurant(Base):
     __tablename__ = "restaurants"
     
     id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    hours_of_operation = Column(String, nullable=True)
     # probably should add name, location fields here at some point
 
 

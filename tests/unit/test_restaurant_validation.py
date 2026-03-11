@@ -41,7 +41,7 @@ def setup_database():
 
     # add some test data
     db = TestingSessionLocal()
-    restaurant = Restaurant(id=1)
+    restaurant = Restaurant(id=1, name="Test Restaurant")
     db.add(restaurant)
 
     menu_item = MenuItem(name="Pizza", restaurant_id=1)
