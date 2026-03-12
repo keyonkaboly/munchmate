@@ -25,7 +25,7 @@ markdown-it-py==4.0.0
 MarkupSafe==3.0.3
 mdurl==0.1.2
 packaging==26.0
-passlib==1.7.4
+passlib[bcrypt]==1.7.4
 pluggy==1.6.0
 protobuf==6.33.5
 pydantic==2.12.5
@@ -55,3 +55,4 @@ uvloop==0.22.1
 watchfiles==1.1.1
 websockets==16.0
 pandas==2.2.2
+pytest-cov==7.0.0
