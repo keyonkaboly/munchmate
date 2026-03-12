@@ -13,4 +13,9 @@ class RestaurantUpdate(RestaurantBase):
 class RestaurantResponse(RestaurantBase):
     id: int
 
-model_config = {"from_attributes":True} # lets you return db object directly from fastapi endpoint and it will be converted to the pydantic model automatically 
+model_config = {"from_attributes":True} # lets you return db object directly from fastapi endpoint and it will be converted to the pydantic model automatically
+
+class MenuItemUpdate(BaseModel):
+    description: Optional[str] = None
+    category: Optional[str] = None
+    is_available: Optional[bool] = None
