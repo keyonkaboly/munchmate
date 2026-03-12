@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Boolean
 from .database import Base
 
 class Customer(Base):
@@ -21,6 +21,8 @@ class Restaurant(Base):
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
     hours_of_operation = Column(String, nullable=True)
+    is_halal = Column(Boolean, default=False)
+    is_vegetarian = Column(Boolean, default=False)
     # probably should add name, location fields here at some point
 
 
