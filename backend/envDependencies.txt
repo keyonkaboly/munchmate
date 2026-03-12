@@ -55,3 +55,4 @@ uvloop==0.22.1
 watchfiles==1.1.1
 websockets==16.0
 pandas==2.2.2
+pytest-cov==7.0.0

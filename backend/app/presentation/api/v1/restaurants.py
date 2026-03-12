@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.infrastructure.database.database import get_db
 from app.infrastructure.database.models import Restaurant, MenuItem
-from app.presentation.schemas.restaurant_schemas import RestaurantUpdate, RestaurantResponse
+from app.presentation.schemas.restaurant_schemas import MenuItemUpdate, RestaurantUpdate, RestaurantResponse
 from app.utils.filters import apply_dietary_filters
 
 # Create router for restaurant endpoints
