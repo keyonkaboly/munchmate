@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Float, Boolean
 from .database import Base
 
 class Customer(Base):
@@ -32,6 +32,7 @@ class MenuItem(Base):
     # Using composite primary key here - name + restaurant_id together
     name = Column(String, primary_key=True)
     restaurant_id = Column(Integer, primary_key=True)
+    price = Column(Float, nullable=True)
     
     # This means each restaurant can have items with same name
     # but the combination of name+restaurant_id must be unique
