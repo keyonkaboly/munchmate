@@ -57,6 +57,13 @@ def get_menu_item(restaurant_id: int, food_item: str, db: Session = Depends(get_
             detail="This food item does not exist at this restaurant"
         )
 
+    # checks if price is a positive integer 
+    if item.price is None or item.price <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Price must be a positive integer"
+    )
+
     # Build response with both pieces of info
     response = {
         "food_item": item.name,
