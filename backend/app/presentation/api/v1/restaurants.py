@@ -3,11 +3,25 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.infrastructure.database.database import get_db
 from app.infrastructure.database.models import Restaurant, MenuItem
-from app.presentation.schemas.restaurant_schemas import RestaurantUpdate, RestaurantResponse, MenuItemUpdate
+from app.presentation.schemas.restaurant_schemas import RestaurantUpdate, RestaurantResponse
+from app.utils.filters import apply_dietary_filters
 
 # Create router for restaurant endpoints
 router = APIRouter(prefix="/restaurants", tags=["restaurants"])
 
+@router.get("/")
+def get_filtered_restaurants(
+    is_halal: bool = None,
+    is_vegetarian: bool = None,
+    db: Session = Depends(get_db)
+):
+    "Return restaurants filtered by dietary options."
+    restaurants = apply_dietary_filters(db, is_halal=is_halal, is_vegetarian=is_vegetarian)
+
+    if not restaurants:
+        return {"message": "No restaurants found"}
+
+    return restaurants
 
 @router.get("/{restaurant_id}")
 def get_restaurant(restaurant_id: int, db: Session = Depends(get_db)):
