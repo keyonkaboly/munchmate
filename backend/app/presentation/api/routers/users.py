@@ -5,10 +5,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.infrastructure.database.database import get_db
 
-router = APIRouter(prefix="/users", tags=["users"])
+router_user = APIRouter(prefix="/users", tags=["users"])
 
 #creating new user so new new data so using post & only returning userresponse, not the password
-@router.post("/", response_model=UserResponse) #userresponse is from schemas and renturns the set defined already
+@router_user.post("/", response_model=UserResponse) #userresponse is from schemas and renturns the set defined already
 def create_user(
     user: UserCreate,
     db: Session = Depends(get_db) #get_db creates a new database session & gives it to the route
