@@ -41,10 +41,10 @@ def setup_database():
 
     # add some test data
     db = TestingSessionLocal()
-    restaurant = Restaurant(id=1)
+    restaurant = Restaurant(id=1, name="Test Restaurant")
     db.add(restaurant)
 
-    menu_item = MenuItem(name="Pizza", restaurant_id=1)
+    menu_item = MenuItem(name="Pizza", restaurant_id=1, price=10)
     db.add(menu_item)
 
     db.commit()
@@ -106,3 +106,46 @@ def test_invalid_menu_item_for_restaurant():
 
     # Should return 404 since Sushi isn't on the menu for restaurant 1
     assert response.status_code == 404
+    
+def test_menu_item_price_negative():
+
+    # Insert a menu item with invalid price
+    db = TestingSessionLocal() # opens a new db session connected to the SQLite test db
+    bad_item = MenuItem(name="BadPizza", restaurant_id=1, price=-10) # crears a menu item object in memory, not go in db yet
+    db.add(bad_item) # prepare to insert this object into the db, but not saved yet
+    db.commit() # writes into new row in test db
+    db.close() # release resources, prevents connection leaks 
+
+    response = client.get("/restaurants/1/menu-items/BadPizza") # simulates real HTTP request using FastAPI's testclient 
+
+    assert response.status_code == 400 # checks API returned
+    assert response.json()["detail"] == "Price must be a positive integer"
+
+def test_menu_item_price_zero():
+
+    db = TestingSessionLocal()
+    bad_item = MenuItem(name="FreePizza", restaurant_id=1, price=0)
+    db.add(bad_item)
+    db.commit()
+    db.close()
+
+    response = client.get("/restaurants/1/menu-items/FreePizza")
+
+    assert response.status_code == 400
+
+def test_menu_item_price_valid():
+
+    db = TestingSessionLocal()
+    good_item = MenuItem(name="Burger", restaurant_id=1, price=15)
+    db.add(good_item)
+    db.commit()
+    db.close()
+
+    response = client.get("/restaurants/1/menu-items/Burger")
+
+    assert response.status_code == 200
+
+    json_data = response.json()
+    assert json_data["food_item"] == "Burger"
+    assert json_data["restaurant_id"] == 1
+
