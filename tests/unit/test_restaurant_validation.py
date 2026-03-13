@@ -189,5 +189,7 @@ def test_search_menu_items_not_found():
     response = client.get("/restaurants/1/menu-items/search", params={"query": "NotOnMenu"})
 
     assert response.status_code == 200
-    assert response.json()["message"] == "Sorry! This restaurant does not have this menu item."
+    json_data = response.json()
+    assert isinstance(json_data, list)
+    assert json_data == []
 

@@ -46,7 +46,7 @@ def search_menu_items(restaurant_id: int, query: str, db: Session = Depends(get_
     matches = db.query(MenuItem).filter(MenuItem.restaurant_id == restaurant_id, MenuItem.name.ilike(f"%{query}%")).all()
 
     if not matches:
-        return {"message": "Sorry! This restaurant does not have this menu item."}
+        return []
 
     return matches
 
