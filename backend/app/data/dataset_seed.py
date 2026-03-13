@@ -5,7 +5,7 @@ from app.infrastructure.database.models import Restaurant, MenuItem
 
 def seed_restaurants(result, db_session):
     """Seed unique restaurants from the dataset into the database."""
-    uniqueRestaurants = result[['restaurant_id']].drop_duplicates(subset=['restaurant_id'])
+    uniqueRestaurants = result[['restaurant_id', 'location']].drop_duplicates(subset=['restaurant_id'])
     restaurant_count = 0
 
     for index, row in uniqueRestaurants.iterrows():
@@ -13,7 +13,7 @@ def seed_restaurants(result, db_session):
         exist = db_session.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
 
         if not exist:
-            restaurant = Restaurant(id=restaurant_id, name=f"Restaurant {restaurant_id}")
+            restaurant = Restaurant(id=restaurant_id, name=f"Restaurant {restaurant_id}", location=str(row['location']) if row['location'] is not None else None,)
             db_session.add(restaurant)
             restaurant_count += 1
 

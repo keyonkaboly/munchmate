@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.infrastructure.database.database import get_db
-from app.infrastructure.database.models import Base, Restaurant
+from app.infrastructure.database.models import Base, Restaurant, MenuItem
 
 # provides an isolated test database so real data is never affected
 TEST_DATABASE_URL = "sqlite:///./test.db"
@@ -27,7 +27,11 @@ def setup_database():
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
     restaurant = Restaurant(id=1, name="Pizza Place", description="Good pizza", hours_of_operation="9am-9pm")
+    second_restaurant = Restaurant(id=2, name="Burger Place", description="Good burgers", hours_of_operation="10am-10pm")
     db.add(restaurant)
+    db.add(second_restaurant)
+    menu_item = MenuItem(name="Pizza", restaurant_id=1, price=10)
+    db.add(menu_item)
     db.commit()
     db.close()
     yield
@@ -83,3 +87,15 @@ def test_put_changes_are_saved_and_retrievable():
     })
     response = client.get("/restaurants/1")
     assert response.status_code == 200
+
+"""Check if API blocks access to a menu item when restaurant ID doesn't match the restaurant of the menu item.
+Looks for restaurant_id = 1 , name = Pizza. Saves the menu item id. Closes database and requests the id (via api endpoint).
+This should be invalid because we ask for endpoint of restaurant 2 item 17 which does not exist."""
+def test_menu_item_id_mismatch_returns_404():
+    db = TestingSessionLocal()
+    menu_item = db.query(MenuItem).filter(MenuItem.restaurant_id == 1, MenuItem.name == "Pizza").first()
+    item_id = menu_item.id
+    db.close()
+
+    response = client.get(f"/restaurants/2/menu-items/id/{item_id}")
+    assert response.status_code == 404

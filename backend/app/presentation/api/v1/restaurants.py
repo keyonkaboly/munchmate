@@ -101,7 +101,7 @@ def get_menu_items(restaurant_id: int, db: Session = Depends(get_db)):
     return menu_items
 
 
-@router.get("/{restaurant_id}/menu-items/{menu_item_id}")
+@router.get("/{restaurant_id}/menu-items/id/{menu_item_id}")
 def get_menu_item_by_id(restaurant_id: int, menu_item_id: int, db: Session = Depends(get_db)):
     """Return one menu item only if it belongs to the given restaurant.
     Validate restaurant existence. Search for menu item using id's for menu item and restaurant.
@@ -119,7 +119,7 @@ def get_menu_item_by_id(restaurant_id: int, menu_item_id: int, db: Session = Dep
     return menu_item
 
 
-@router.patch("/{restaurant_id}/menu-items/{menu_item_id}")
+@router.patch("/{restaurant_id}/menu-items/id/{menu_item_id}")
 def update_menu_item(restaurant_id: int, menu_item_id: int, data: MenuItemUpdate, db: Session = Depends(get_db)):
     """Update allowed menu-item fields for a specific restaurant item.
     Validate restaurant existence, validate menu item exists for that restaurant.
