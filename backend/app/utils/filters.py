@@ -2,7 +2,7 @@ from app.infrastructure.database.models import Restaurant
 from sqlalchemy.orm import Session
 
 # takes the db connection and two optional filters (None means not provided)
-def apply_dietary_filters(db: Session, is_halal: bool = None, is_vegetarian: bool = None, cuisine_type: str = None):
+def apply_dietary_filters(db: Session, is_halal: bool = None, is_vegetarian: bool = None, return_query: bool = False):
     # command to fetch all restaurants
     query = db.query(Restaurant)
     
@@ -15,4 +15,6 @@ def apply_dietary_filters(db: Session, is_halal: bool = None, is_vegetarian: boo
     if cuisine_type is not None:
         query = query.filter(Restaurant.cuisine_type == cuisine_type)
 
+    if return_query:
+        return query
     return query.all()
