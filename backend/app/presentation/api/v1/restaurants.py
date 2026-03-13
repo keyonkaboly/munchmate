@@ -34,6 +34,22 @@ def get_restaurant(restaurant_id: int, db: Session = Depends(get_db)):
 
     return {"restaurant_id": restaurant.id}
 
+"""Search for menu items within a specific restaurant using string text query.
+The return is any matches that partially match the string query text.
+If restaurant id doesn't exist 404 occurs. If nothing matches message is displayed."""
+@router.get("/{restaurant_id}/menu-items/search")
+def search_menu_items(restaurant_id: int, query: str, db: Session = Depends(get_db)):
+    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restaurant not found. ")
+
+    matches = db.query(MenuItem).filter(MenuItem.restaurant_id == restaurant_id, MenuItem.name.ilike(f"%{query}%")).all()
+
+    if not matches:
+        return {"message": "Sorry! This restaurant does not have this menu item."}
+
+    return matches
+
 
 @router.get("/{restaurant_id}/menu-items/{food_item}")
 def get_menu_item(restaurant_id: int, food_item: str, db: Session = Depends(get_db)):
