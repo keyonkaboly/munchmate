@@ -27,9 +27,9 @@ def setup_database():
     Base.metadata.create_all(bind=engine)
 
     db = TestingSessionLocal()
-    db.add(Restaurant(id=1, name="Halal Place", is_halal=True, is_vegetarian=False))
-    db.add(Restaurant(id=2, name="Veggie Place", is_halal=False, is_vegetarian=True))
-    db.add(Restaurant(id=3, name="Regular Place", is_halal=False, is_vegetarian=False))
+    db.add(Restaurant(id=1, name="Halal Place", is_halal=True, is_vegetarian=False, cuisine_type="American"))
+    db.add(Restaurant(id=2, name="Veggie Place", is_halal=False, is_vegetarian=True, cuisine_type="Italian"))
+    db.add(Restaurant(id=3, name="Regular Place", is_halal=False, is_vegetarian=False, cuisine_type="Asian"))
     db.commit()
     db.close()
 
@@ -68,3 +68,11 @@ def test_filter_no_results():
     response = client.get("/restaurants/?is_halal=true&is_vegetarian=true")
     assert response.status_code == 200
     assert response.json() == {"message": "No restaurants found"}
+
+# filtering by cuisine type
+def test_filter_by_cuisine_type():
+    response = client.get("/restaurants/?cuisine_type=Italian")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["name"] == "Veggie Place"

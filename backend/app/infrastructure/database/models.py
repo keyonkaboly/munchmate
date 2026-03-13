@@ -23,6 +23,7 @@ class Restaurant(Base):
     hours_of_operation = Column(String, nullable=True)
     is_halal = Column(Boolean, default=False)
     is_vegetarian = Column(Boolean, default=False)
+    cuisine_type = Column(String, nullable=True)
     # probably should add name, location fields here at some point
 
 
