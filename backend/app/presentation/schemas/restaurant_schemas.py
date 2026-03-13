@@ -4,8 +4,8 @@ from typing import Optional
 #this file is for restaurant schemas, which will be used for restaurant info 
 class RestaurantBase(BaseModel):
     name: str = Field(min_length=1, max_length=100) #rest. name must be between 1 to 100 characters
-    description: Optional[str] = Field(default=None, max_length=500) # its optional to write a description about the restaurant
-    hours_of_operation : Optional[str] = Field(default=None, max_length=100) # its optional to put the hours of the restaurant
+    location: Optional[str] = Field(default=None, max_length=500) # its optional to write a description about the restaurant
+    food_item : Optional[str] = Field(default=None, max_length=100) # its optional to put the hours of the restaurant
     
 class RestaurantUpdate(RestaurantBase):
     pass
