@@ -157,8 +157,7 @@ def test_search_menu_items_by_text():
 
     assert response.status_code == 200
     json_data = response.json()
-    assert isinstance(json_data, list)
-    assert any(item["name"] == "Pizza" for item in json_data)
+    assert any(item["name"] == "Pizza" for item in json_data["items"])
 
 """Ensures the search can handle menu items with special characters. Created query with special character and ensures it can be found using search."""
 def test_search_menu_items_special_characters():
@@ -173,8 +172,7 @@ def test_search_menu_items_special_characters():
 
     assert response.status_code == 200
     json_data = response.json()
-    assert isinstance(json_data, list)
-    assert any(menu_item["name"] == "Mac & Cheese" for menu_item in json_data)
+    assert any(menu_item["name"] == "Mac & Cheese" for menu_item in json_data["items"])
 
 """Ensure that searching with a non existing restaurant id returns 404."""
 def test_search_menu_items_invalid_restaurant_id():
@@ -190,6 +188,6 @@ def test_search_menu_items_not_found():
 
     assert response.status_code == 200
     json_data = response.json()
-    assert isinstance(json_data, list)
-    assert json_data == []
+    assert json_data["items"] == []
+    assert json_data["total"] == 0
 

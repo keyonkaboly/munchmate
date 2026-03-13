@@ -45,26 +45,53 @@ def test_filter_by_halal():
     response = client.get("/restaurants/?is_halal=true")
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == 1
-    assert data[0]["name"] == "Halal Place"
+    assert data["total"] == 1
+    assert data["items"][0]["name"] == "Halal Place"
 
 # filtering by vegetarian 
 def test_filter_by_vegetarian():
     response = client.get("/restaurants/?is_vegetarian=true")
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == 1
-    assert data[0]["name"] == "Veggie Place"
+    assert data["total"] == 1
+    assert data["items"][0]["name"] == "Veggie Place"
 
 # no filters returns all restaurants
 def test_no_filter_returns_all():
     response = client.get("/restaurants/")
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == 3
+    assert data["total"] == 3
 
 # filter with no matches returns the correct message
 def test_filter_no_results():
     response = client.get("/restaurants/?is_halal=true&is_vegetarian=true")
     assert response.status_code == 200
     assert response.json() == {"message": "No restaurants found"}
+
+"""Ensure the first page of restaurant returns 20 items, has page num 1, and includes a total of 2 pages."""
+def test_pagination_first_page():
+    db = TestingSessionLocal()
+    for i in range(4, 26):
+        db.add(Restaurant(id=i, name=f"Restaurant {i}", is_halal=False, is_vegetarian=False))
+    db.commit()
+    db.close()
+
+    data = client.get("/restaurants/?page=1&page_size=20").json()
+    assert len(data["items"]) == 20
+    assert data["total"] == 25
+    assert data["page"] == 1
+    assert data["total_pages"] == 2
+
+"""Ensure the second page of restaurants endpoint returns remaining items from 25 items from prev test.
+Page 2 should only contain leftover results. Check if page num is 2 and item num is 5 (25-20)"""
+def test_pagination_second_page():
+    db = TestingSessionLocal()
+    for i in range(4, 26):
+        db.add(Restaurant(id=i, name=f"Restaurant {i}", is_halal=False, is_vegetarian=False))
+    db.commit()
+    db.close()
+
+    data = client.get("/restaurants/?page=2&page_size=20").json()
+    assert len(data["items"]) == 5
+    assert data["page"] == 2
