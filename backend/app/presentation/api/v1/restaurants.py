@@ -1,10 +1,11 @@
 """Module for restaurant and menu item validation routes."""
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.infrastructure.database.database import get_db
 from app.infrastructure.database.models import Restaurant, MenuItem
 from app.presentation.schemas.restaurant_schemas import MenuItemUpdate, RestaurantUpdate, RestaurantResponse
 from app.utils.filters import apply_dietary_filters
+from app.utils.pagination import paginate
 
 # Create router for restaurant endpoints
 router = APIRouter(prefix="/restaurants", tags=["restaurants"])
@@ -13,15 +14,17 @@ router = APIRouter(prefix="/restaurants", tags=["restaurants"])
 def get_filtered_restaurants(
     is_halal: bool = None,
     is_vegetarian: bool = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=20),
     db: Session = Depends(get_db)
 ):
-    "Return restaurants filtered by dietary options."
-    restaurants = apply_dietary_filters(db, is_halal=is_halal, is_vegetarian=is_vegetarian)
+    "Returns restaurants filtered by dietary options and includes page numbers."
+    query = apply_dietary_filters(db, is_halal=is_halal, is_vegetarian=is_vegetarian, return_query=True)
 
-    if not restaurants:
+    if query.count() == 0:
         return {"message": "No restaurants found"}
 
-    return restaurants
+    return paginate(query, page=page, page_size=page_size)
 
 @router.get("/{restaurant_id}")
 def get_restaurant(restaurant_id: int, db: Session = Depends(get_db)):
@@ -33,6 +36,27 @@ def get_restaurant(restaurant_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Restaurant ID not found")
 
     return {"restaurant_id": restaurant.id}
+
+"""Search for menu items within a specific restaurant using string text query.
+The return is any matches that partially match the string query text.
+If restaurant id doesn't exist 404 occurs. If nothing matches an empty list is returned."""
+@router.get("/{restaurant_id}/menu-items/search")
+def search_menu_items(
+    restaurant_id: int,
+    query: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=20),
+    db: Session = Depends(get_db)
+):
+    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restaurant not found. ")
+
+    search_query = db.query(MenuItem).filter(
+        MenuItem.restaurant_id == restaurant_id,
+        MenuItem.name.ilike(f"%{query}%")
+    )
+    return paginate(search_query, page=page, page_size=page_size)
 
 
 @router.get("/{restaurant_id}/menu-items/{food_item}")
