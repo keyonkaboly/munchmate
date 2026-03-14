@@ -1,4 +1,5 @@
 from pydantic import BaseModel,EmailStr, Field, ConfigDict
+from typing import Optional
 
 #this file is for user schemas, which will be used for user registration and login
 class UserBase(BaseModel):
@@ -7,6 +8,7 @@ class UserBase(BaseModel):
     
 class UserCreate(UserBase):
     password: str = Field(min_length=6)
+    role: Optional[str] = "user"
     
 class UserLogin(BaseModel):
     email: EmailStr
