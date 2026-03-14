@@ -26,7 +26,7 @@ app.dependency_overrides[get_db] = override_get_db
 def setup_database():
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
-    restaurant = Restaurant(id=1, location="123 Old Street", food_item="Pizza")
+    restaurant = Restaurant(id=1, location="City_3", food_item="Pizza")
     db.add(restaurant)
     db.commit()
     db.close()
@@ -40,12 +40,12 @@ client = TestClient(app)
 def test_put_updates_restaurant_info():
     response = client.put("/restaurants/1", json={
         "id": 1,
-        "location": "456 New Street",
+        "location": "City_4",
         "food_item": "Pasta"
     })
     assert response.status_code == 200
     json_data = response.json()
-    assert json_data["location"] == "456 New Street"
+    assert json_data["location"] == "City_4"
     assert json_data["food_item"] == "Pasta"
 
 # Verifies that fetching a restaurant returns the correct JSON format
@@ -77,11 +77,11 @@ def test_put_missing_name_returns_422():
 def test_put_changes_are_saved_and_retrievable():
     client.put("/restaurants/1", json={
         "id": 1,
-        "location": "789 Updated Ave",
+        "location": "City_5",
         "food_item": "Burger"
     })
     response = client.get("/restaurants/1")
     assert response.status_code == 200
     json_data = response.json()
-    assert json_data["location"] == "789 Updated Ave"
+    assert json_data["location"] == "City_5"
     assert json_data["food_item"] == "Burger"
