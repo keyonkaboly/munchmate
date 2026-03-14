@@ -1,10 +1,11 @@
-from fastapi import APIRouter, FastAPI, HTTPException, status
+from fastapi import APIRouter, FastAPI, HTTPException, status, Depends
 from app.infrastructure.security.hashing import hash_password, verify_password
 from app.infrastructure.security.auth import create_access_token
 from app.infrastructure.database.user_database import fake_user_db
 from app.presentation.schemas.user_schemas import UserCreate, UserLogin, Token
+from app.infrastructure.security.auth import get_current_user
 
-router_auth = APIRouter()
+router_auth = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router_auth.post("/register")
 def register(user: UserCreate):
@@ -43,3 +44,7 @@ def login(credentials: UserLogin):
     
     token = create_access_token(data={"sub": user["email"]})
     return {"access_token": token, "token_type": "bearer"}
+
+@router_auth.get("/me")
+def get_profile(current_user: str = Depends(get_current_user)):
+    return {"user": current_user}
