@@ -80,14 +80,14 @@ def seed_order_data(result, db_session):
         restaurant_id = int(row['restaurant_id'])
         subtotal = float(row['order_value'])
         tax = round((subtotal) * (0.12), 2)
-        delivery_fee = 5.00
-        total_cost = round(subtotal + tax + delivery_fee, 2)
+        delivery_cost = 5.00
+        total_cost = round(subtotal + tax + delivery_cost, 2)
     
 
         exist = db_session.query(Order).filter(Order.order_id == order_id).first()
 
         if not exist:
-            order = Order(order_id=order_id, user_id=user_id, restaurant_id=restaurant_id, subtotal=subtotal, tax=tax,delivery_fee=delivery_fee, total_cost=total_cost)
+            order = Order(order_id=order_id, user_id=user_id, restaurant_id=restaurant_id, subtotal=subtotal, tax=tax,delivery_cost=delivery_cost, total_cost=total_cost)
             db_session.add(order)
             order_count += 1
         

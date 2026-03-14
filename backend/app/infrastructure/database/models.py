@@ -46,5 +46,5 @@ class Order(Base):
     restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable = False)
     subtotal = Column(Float, nullable = False, default = 0.0)
     tax = Column(Float, nullable = False, default = 0.0)
-    delivery_fee = Column(Float, nullable = False, default = 5.0)
+    delivery_cost = Column(Float, nullable = False, default = 5.0)
     total_cost = Column(Float, nullable = False, default = 0.0)
