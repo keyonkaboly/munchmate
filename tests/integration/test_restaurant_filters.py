@@ -27,9 +27,9 @@ def setup_database():
     Base.metadata.create_all(bind=engine)
 
     db = TestingSessionLocal()
-    db.add(Restaurant(id=1, name="Halal Place", is_halal=True, is_vegetarian=False, cuisine_type="American"))
-    db.add(Restaurant(id=2, name="Veggie Place", is_halal=False, is_vegetarian=True, cuisine_type="Italian"))
-    db.add(Restaurant(id=3, name="Regular Place", is_halal=False, is_vegetarian=False, cuisine_type="Asian"))
+    db.add(Restaurant(id=1, location="123 Main St", is_halal=True, is_vegetarian=False, cuisine_type="American"))
+    db.add(Restaurant(id=2, location="456 Oak Ave", is_halal=False, is_vegetarian=True, cuisine_type="Italian"))
+    db.add(Restaurant(id=3, location="789 Pine Rd", is_halal=False, is_vegetarian=False, cuisine_type="Asian"))
     db.commit()
     db.close()
 
@@ -46,7 +46,7 @@ def test_filter_by_halal():
     assert response.status_code == 200
     data = response.json()
     assert data["total"] == 1
-    assert data["items"][0]["name"] == "Halal Place"
+    assert data["items"][0]["location"] == "123 Main St"
 
 # filtering by vegetarian 
 def test_filter_by_vegetarian():
@@ -54,7 +54,7 @@ def test_filter_by_vegetarian():
     assert response.status_code == 200
     data = response.json()
     assert data["total"] == 1
-    assert data["items"][0]["name"] == "Veggie Place"
+    assert data["items"][0]["location"] == "456 Oak Ave"
 
 # no filters returns all restaurants
 def test_no_filter_returns_all():
@@ -74,14 +74,14 @@ def test_filter_by_cuisine_type():
     response = client.get("/restaurants/?cuisine_type=Italian")
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == 1
-    assert data[0]["name"] == "Veggie Place"
+    assert data["total"] == 1
+    assert data["items"][0]["cuisine_type"] == "Italian"
     
 """Ensure the first page of restaurant returns 20 items, has page num 1, and includes a total of 2 pages."""
 def test_pagination_first_page():
     db = TestingSessionLocal()
     for i in range(4, 26):
-        db.add(Restaurant(id=i, name=f"Restaurant {i}", is_halal=False, is_vegetarian=False))
+        db.add(Restaurant(id=i, location=f"Restaurant {i}", is_halal=False, is_vegetarian=False))
     db.commit()
     db.close()
 
@@ -96,7 +96,7 @@ Page 2 should only contain leftover results. Check if page num is 2 and item num
 def test_pagination_second_page():
     db = TestingSessionLocal()
     for i in range(4, 26):
-        db.add(Restaurant(id=i, name=f"Restaurant {i}", is_halal=False, is_vegetarian=False))
+        db.add(Restaurant(id=i, location=f"Restaurant {i}", is_halal=False, is_vegetarian=False))
     db.commit()
     db.close()
 

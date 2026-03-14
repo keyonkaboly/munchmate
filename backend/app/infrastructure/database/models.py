@@ -18,9 +18,8 @@ class Restaurant(Base):
     __tablename__ = "restaurants"
     
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    description = Column(String, nullable=True)
-    hours_of_operation = Column(String, nullable=True)
+    location = Column(String, nullable=True)
+    food_item = Column(String, nullable=True)
     is_halal = Column(Boolean, default=False)
     is_vegetarian = Column(Boolean, default=False)
     cuisine_type = Column(String, nullable=True)
@@ -31,7 +30,7 @@ class MenuItem(Base):
     __tablename__ = "menu_items"
     
     # Using composite primary key here - name + restaurant_id together
-    name = Column(String, primary_key=True)
+    food_item = Column(String, primary_key=True)
     restaurant_id = Column(Integer, primary_key=True)
     price = Column(Float, nullable=True)
     

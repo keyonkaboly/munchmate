@@ -20,23 +20,21 @@ def get_filtered_restaurants(
     db: Session = Depends(get_db) 
 ):
     "Returns restaurants filtered by dietary options and includes page numbers."
-    query = apply_dietary_filters(db, is_halal=is_halal, is_vegetarian=is_vegetarian, return_query=True)
+    query = apply_dietary_filters(db, is_halal=is_halal, is_vegetarian=is_vegetarian, cuisine_type=cuisine_type, return_query=True)
 
     if query.count() == 0:
         return {"message": "No restaurants found"}
 
     return paginate(query, page=page, page_size=page_size)
 
-@router.get("/{restaurant_id}")
+@router.get("/{restaurant_id}", response_model=RestaurantResponse)
 def get_restaurant(restaurant_id: int, db: Session = Depends(get_db)):
-    """Check if a restaurant exists by ID."""
-    # Simple lookup to see if restaurant exists
     restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
-
+    
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant ID not found")
-
-    return {"restaurant_id": restaurant.id}
+    
+    return restaurant
 
 """Search for menu items within a specific restaurant using string text query.
 The return is any matches that partially match the string query text.
@@ -55,7 +53,7 @@ def search_menu_items(
 
     search_query = db.query(MenuItem).filter(
         MenuItem.restaurant_id == restaurant_id,
-        MenuItem.name.ilike(f"%{query}%")
+        MenuItem.food_item.ilike(f"%{query}%")
     )
     return paginate(search_query, page=page, page_size=page_size)
 
@@ -72,7 +70,7 @@ def get_menu_item(restaurant_id: int, food_item: str, db: Session = Depends(get_
     # Then check if the menu item is available at this restaurant
     item = db.query(MenuItem).filter(
         MenuItem.restaurant_id == restaurant_id,
-        MenuItem.name == food_item  # Match by exact name
+        MenuItem.food_item == food_item  # Match by exact name
     ).first()
 
     if not item:
@@ -84,7 +82,7 @@ def get_menu_item(restaurant_id: int, food_item: str, db: Session = Depends(get_
 
     # Build response with both pieces of info
     response = {
-        "food_item": item.name,
+        "food_item": item.food_item,
         "restaurant_id": rest.id
     }
 
@@ -99,7 +97,7 @@ def update_restaurant(restaurant_id: int, data: RestaurantUpdate, db: Session = 
         raise HTTPException(status_code=404, detail="Restaurant ID not found")
 
    # overwrites old values with new ones from the request `
-    restaurant.name = data.name
+    restaurant.id = data.id
     restaurant.location = data.location
     restaurant.food_item = data.food_item
 
