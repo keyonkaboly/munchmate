@@ -4,6 +4,7 @@ from app.infrastructure.database.database import get_db
 from app.infrastructure.database.models import Order
 from app.presentation.schemas.delivery_schemas import OrderCreate, OrderResponse
 
+VALID_STATUSES = ["Pending", "Assigned", "In Transit", "Delivered"]
 router = APIRouter(prefix="/orders", tags=["orders"])
 
 @router.post
@@ -26,7 +27,6 @@ def get_order(order_id: int, db: Session = Depends(get_db)):
 
 @router.patch("/{order_id}/status", response_model=OrderResponse)
 def update_order_status(order_id: int, status: str, db: Session = Depends(get_db)):
-    """Update the delivery status of an order."""
     if status not in VALID_STATUSES:
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {VALID_STATUSES}")
     order = db.query(Order).filter(Order.order_id == order_id).first()
