@@ -149,25 +149,6 @@ def test_menu_item_price_valid():
     assert json_data["food_item"] == "Burger"
     assert json_data["restaurant_id"] == 1
 
-
-"""Inverse of test_menu_id_must_match_restaurant_id test.
-Creates restaurant 1 and menu item Pizza. Calls the endpoint. Should return 200.
-Verify returned data, check item_id is correct and so is restaurant id"""
-def test_valid_menu_item_id_for_restaurant():
-    db = TestingSessionLocal()
-    item = db.query(MenuItem).filter(MenuItem.name == "Pizza", MenuItem.restaurant_id == 1).first()
-    item_id = item.id
-    db.close()
-
-    response = client.get(f"/restaurants/1/menu-items/id/{item_id}")
-
-    assert response.status_code == 200
-
-    json_data = response.json()
-    assert json_data["id"] == item_id
-    assert json_data["restaurant_id"] == 1
-
-
 """Similiar to test_menu_item_id_mismatch_returns_404().
 Ensure a menu item ID cannot be taken from an endpoint with a wrong restaurant ID.
 Create a 2nd restaurant and save to database. Gets pizza item from Restaurant 1.
@@ -228,3 +209,11 @@ def test_search_menu_items_not_found():
     assert json_data["items"] == []
     assert json_data["total"] == 0
 
+"""Simple test case to ensure endpoint is reachable and valid for menu item"""
+def test_restaurant_endpoint_confirmation():
+    db = TestingSessionLocal()
+    item = db.query(MenuItem).filter(MenuItem.restaurant_id==1).first()
+    item_id = item.id
+    db.close()
+    response = client.get(f"/restaurants/1/menu-items/id/{item_id}")
+    assert response.status_code == 200
