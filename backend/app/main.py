@@ -3,6 +3,7 @@ from app.presentation.api.v1 import authorization
 from app.presentation.api.routers.users import router
 from app.infrastructure.database.database import Base, engine
 from app.presentation.api.v1 import restaurants
+from app.presentation.api.v1 import checkout
 
 
 
@@ -15,7 +16,9 @@ Base.metadata.create_all(bind=engine)
 app.include_router(router)
 
 # Include restaurant router after authorization, making sure auth is checked before getting access to the restaurant endpoints
-app.include_router(restaurants.router)             
+app.include_router(restaurants.router)
+
+app.include_router(checkout.router)
 
 # Creates endpoint
 @app.get("/")
