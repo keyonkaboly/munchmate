@@ -1,4 +1,4 @@
-from backend.app.infrastructure.security.hashing import hash_password, verify_password
+from app.infrastructure.security.hashing import hash_password, verify_password
 
 def test_hash_password():
     password = "mysecretpassword"

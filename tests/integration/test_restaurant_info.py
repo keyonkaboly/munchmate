@@ -26,7 +26,7 @@ app.dependency_overrides[get_db] = override_get_db
 def setup_database():
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
-    restaurant = Restaurant(id=1, name="Pizza Place", description="Good pizza", hours_of_operation="9am-9pm")
+    restaurant = Restaurant(id=1, location="City_3", food_item="Pizza")
     db.add(restaurant)
     db.commit()
     db.close()
@@ -39,47 +39,49 @@ client = TestClient(app)
 # Verifies that updating a restaurant returns the correct updated data
 def test_put_updates_restaurant_info():
     response = client.put("/restaurants/1", json={
-        "name": "New Pizza Place",
-        "description": "Even better pizza",
-        "hours_of_operation": "8am-10pm"
+        "id": 1,
+        "location": "City_4",
+        "food_item": "Pasta"
     })
     assert response.status_code == 200
     json_data = response.json()
-    assert json_data["name"] == "New Pizza Place"
-    assert json_data["description"] == "Even better pizza"
-    assert json_data["hours_of_operation"] == "8am-10pm"
+    assert json_data["location"] == "City_4"
+    assert json_data["food_item"] == "Pasta"
 
 # Verifies that fetching a restaurant returns the correct JSON format
 def test_get_restaurant_returns_correct_format():
     response = client.get("/restaurants/1")
     assert response.status_code == 200
     json_data = response.json()
-    assert "restaurant_id" in json_data
-    assert json_data["restaurant_id"] == 1
+    assert "id" in json_data
+    assert json_data["id"] == 1
 
 # Verifies that the API handles non-existent restaurants with a proper error
 def test_put_invalid_restaurant_returns_404():
     response = client.put("/restaurants/999", json={
-        "name": "Ghost Restaurant",
-        "description": "Doesn't exist",
-        "hours_of_operation": "never"
+        "id": 999,
+        "location": "Doesn't exist",
+        "food_item": "never"
     })
     assert response.status_code == 404
 
 # verifyies that the API rejects incomplete or invalid input data
 def test_put_missing_name_returns_422():
     response = client.put("/restaurants/1", json={
-        "description": "No name provided",
-        "hours_of_operation": "9am-9pm"
+        "location": "No id provided",
+        "food_item": "Pizza"
     })
     assert response.status_code == 422
 
 # verifies that updates are actually retrievable from the database
 def test_put_changes_are_saved_and_retrievable():
     client.put("/restaurants/1", json={
-        "name": "Saved Pizza Place",
-        "description": "This should be saved",
-        "hours_of_operation": "10am-8pm"
+        "id": 1,
+        "location": "City_5",
+        "food_item": "Burger"
     })
     response = client.get("/restaurants/1")
     assert response.status_code == 200
+    json_data = response.json()
+    assert json_data["location"] == "City_5"
+    assert json_data["food_item"] == "Burger"
