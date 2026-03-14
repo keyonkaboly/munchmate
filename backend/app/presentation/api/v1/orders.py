@@ -11,6 +11,7 @@ router = APIRouter(prefix="/orders", tags=["orders"])
 @router.post("/", response_model=OrderResponse) 
 def create_order(data: OrderCreate, db: Session = Depends(get_db)):
     order = Order(**data.model_dump())
+    order.delivery_status="Assigned"
     db.add(order)
     db.commit()
     db.refresh(order)
