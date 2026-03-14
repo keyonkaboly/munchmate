@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.infrastructure.database.database import get_db
-from app.infrastructure.database.models import Restaurant, MenuItem
+from app.infrastructure.database.models import Restaurant, MenuItem, Order
 from app.presentation.schemas.restaurant_schemas import RestaurantUpdate, RestaurantResponse
 from app.utils.filters import apply_dietary_filters
 from app.utils.pagination import paginate
@@ -57,6 +57,15 @@ def search_menu_items(
     )
     return paginate(search_query, page=page, page_size=page_size)
 
+"""Getting order by using order_id"""
+@router.get("/{order_id}", response_model=RestaurantResponse)
+def get_order(order_id: str, db: Session = Depends(get_db)):
+    exist = db.query(Order).filter(Order.order_id == order_id).first()
+
+    if exist is None:
+        raise HTTPException(status_code=404, detail="Order not found.")
+       
+    return exist
 
 @router.get("/{restaurant_id}/menu-items/{food_item}")
 def get_menu_item(restaurant_id: int, food_item: str, db: Session = Depends(get_db)):
