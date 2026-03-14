@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime
 from .database import Base
+from datetime import datetime, timezone
 
 class Customer(Base):
     __tablename__ = "customers"
@@ -11,6 +12,13 @@ class Customer(Base):
     username = Column(String, unique=True, nullable=False)
     email = Column(String, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
+
+class RevokedToken(Base):
+    __tablename__ = "revoked_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    token = Column(String, unique=True, nullable=False)
+    revoked_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 # Restaurant table definition

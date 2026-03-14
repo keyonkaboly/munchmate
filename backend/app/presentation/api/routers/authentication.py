@@ -5,6 +5,9 @@ from app.infrastructure.database.user_database import fake_user_db
 from app.presentation.schemas.user_schemas import UserCreate, UserLogin, Token
 from app.infrastructure.security.auth import get_current_user
 from app.infrastructure.security.roles import required_role
+from app.infrastructure.database.models import RevokedToken     
+from app.infrastructure.database.database import get_db         
+from sqlalchemy.orm import Session    
 
 router_auth = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -58,6 +61,21 @@ def get_profile(current_user: dict = Depends(get_current_user)):
             detail="Invalid or expired token"
         )
     return {"user": current_user}
+
+
+@router_auth.get("/manager/dashboard")
+def manager_dashboard(current_user: dict = Depends(required_role("manager"))):
+    return {"message": f"Welcome {current_user['username']}, you are a manager"}
+
+@router_auth.post("/logout")
+def logout(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    token = current_user.get("token")
+    db.add(RevokedToken(token=token))
+    db.commit()
+    return {"message": "Successfully logged out"}
 
 
 @router_auth.get("/manager/dashboard")
