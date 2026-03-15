@@ -1,67 +1,58 @@
 import pytest
-from fastapi.testclient import TestClient
-from app.presentation.api.routers.users import router
-from fastapi import FastAPI
-from app.infrastructure.database.database import Base, engine
+from app.infrastructure.database.models import Customer
+from conftest import TestingSessionLocal
 
-app = FastAPI()
-app.include_router(router)
-client = TestClient(app) # simulate the api calls to the app
-
-@pytest.fixture(autouse=True) #its true so it runs before every test
-def reset_datbase():
-    #drop all tables
-    Base.metadata.drop_all(bind=engine)
-    
-    #recreate tables
-    Base.metadata.create_all(bind=engine)
-    
+@pytest.fixture(autouse=True)
+def clean_customers(setup_database):  
+    db = TestingSessionLocal()
+    db.query(Customer).delete()
+    db.commit()
+    db.close()
     yield
-    
-    
-def test_create_user_success():
+    db = TestingSessionLocal()
+    db.query(Customer).delete()
+    db.commit()
+    db.close()
+
+def test_create_user_success(client):
     user_payload = {
         "email": "testuser@example.com",
         "username": "testuser",
         "password": "securepassword"
     }
-    #send a post request to the /users/ endpoint with the user payload
     response = client.post("/users/", json=user_payload)
     assert response.status_code == 200
-    data = response.json() #convert the response to json format
+    data = response.json()
     assert data["email"] == user_payload["email"]
     assert data["username"] == user_payload["username"]
-    assert "password" not in data #password should not be returned in the response
+    assert "password" not in data
 
-def test_create_user_email_invalid():
+def test_create_user_email_invalid(client):
     user_payload = {
         "email": "not_an_email",
         "username": "testuser",
         "password": "securepassword"
     }
     response = client.post("/users/", json=user_payload)
-    
-    #validation error for email, username, and password
-    assert response.status_code == 422 #422 is for unprocessable entity --> data validation fails
+    assert response.status_code == 422
 
-def test_creat_user_short_password():
+def test_create_user_short_password(client):
     user_payload = {
         "email": "testuser@example.com",
         "username": "testuser",
         "password": "123"
     }
     response = client.post("/users/", json=user_payload)
-    assert response.status_code == 422 
-    
-def test_creat_user_duplicate_email():
+    assert response.status_code == 422
+
+def test_create_user_duplicate_email(client):
     user_payload = {
         "email": "duplicate@example.com",
         "username": "testuser",
         "password": "123456"
     }
     response = client.post("/users/", json=user_payload)
-    assert response.status_code == 200 #this is successfull
-    
-    #duplicate response
+    assert response.status_code == 200
+
     response = client.post("/users/", json=user_payload)
-    assert response.status_code == 400 #bad request --> smth went wrong with the request the client sent (invalid input)
+    assert response.status_code == 400

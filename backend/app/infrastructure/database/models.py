@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime
 from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey
-from .database import Base
+from app.infrastructure.database.database import Base
 from datetime import datetime, timezone
 
 class Customer(Base):

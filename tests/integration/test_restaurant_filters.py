@@ -1,84 +1,68 @@
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from app.main import app
-from app.infrastructure.database.database import get_db
-from app.infrastructure.database.models import Base, Restaurant
+from app.infrastructure.database.models import Restaurant, MenuItem
+from conftest import TestingSessionLocal
 
-# Use a separate test database so we don't touch real data
-TEST_DATABASE_URL = "sqlite:///./test.db"
-engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
-# redirecting database calls to the test database during tests
-def override_get_db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-app.dependency_overrides[get_db] = override_get_db
-
-# prepares and cleaning up test data before and after each test
 @pytest.fixture(autouse=True)
-def setup_database():
-    Base.metadata.create_all(bind=engine)
-
+def seed_restaurants():
+    
     db = TestingSessionLocal()
+    db.query(MenuItem).delete()
+    db.query(Restaurant).delete()
+    db.commit()
+
     db.add(Restaurant(id=1, location="City_1", is_halal=True, is_vegetarian=False, cuisine_type="American"))
     db.add(Restaurant(id=2, location="City_10", is_halal=False, is_vegetarian=True, cuisine_type="Italian"))
     db.add(Restaurant(id=3, location="City_2", is_halal=False, is_vegetarian=False, cuisine_type="Asian"))
     db.commit()
     db.close()
-
     yield
 
-    Base.metadata.drop_all(bind=engine)
+    db = TestingSessionLocal()
+    db.query(MenuItem).delete()
+    db.query(Restaurant).delete()
+    db.commit()
+    db.close()
 
-# simulating real HTTP requests to the API during tests
-client = TestClient(app)
 
-# filtering by halal 
-def test_filter_by_halal():
+def test_filter_by_halal(client):
     response = client.get("/restaurants/?is_halal=true")
     assert response.status_code == 200
     data = response.json()
     assert data["total"] == 1
     assert data["items"][0]["location"] == "City_1"
 
-# filtering by vegetarian 
-def test_filter_by_vegetarian():
+
+def test_filter_by_vegetarian(client):
     response = client.get("/restaurants/?is_vegetarian=true")
     assert response.status_code == 200
     data = response.json()
     assert data["total"] == 1
     assert data["items"][0]["location"] == "City_10"
 
-# no filters returns all restaurants
-def test_no_filter_returns_all():
+
+def test_no_filter_returns_all(client):
     response = client.get("/restaurants/")
     assert response.status_code == 200
     data = response.json()
     assert data["total"] == 3
 
-# filter with no matches returns the correct message
-def test_filter_no_results():
+
+def test_filter_no_results(client):
     response = client.get("/restaurants/?is_halal=true&is_vegetarian=true")
     assert response.status_code == 200
     assert response.json() == {"message": "No restaurants found"}
 
-# filtering by cuisine type
-def test_filter_by_cuisine_type():
+
+def test_filter_by_cuisine_type(client):
     response = client.get("/restaurants/?cuisine_type=Italian")
     assert response.status_code == 200
     data = response.json()
     assert data["total"] == 1
     assert data["items"][0]["cuisine_type"] == "Italian"
-    
-"""Ensure the first page of restaurant returns 20 items, has page num 1, and includes a total of 2 pages."""
-def test_pagination_first_page():
+
+
+def test_pagination_first_page(client):
     db = TestingSessionLocal()
     for i in range(4, 26):
         db.add(Restaurant(id=i, location=f"Restaurant {i}", is_halal=False, is_vegetarian=False))
@@ -91,9 +75,8 @@ def test_pagination_first_page():
     assert data["page"] == 1
     assert data["total_pages"] == 2
 
-"""Ensure the second page of restaurants endpoint returns remaining items from 25 items from prev test.
-Page 2 should only contain leftover results. Check if page num is 2 and item num is 5 (25-20)"""
-def test_pagination_second_page():
+
+def test_pagination_second_page(client):
     db = TestingSessionLocal()
     for i in range(4, 26):
         db.add(Restaurant(id=i, location=f"Restaurant {i}", is_halal=False, is_vegetarian=False))

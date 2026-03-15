@@ -2,10 +2,12 @@ from fastapi import FastAPI
 from app.presentation.api.v1 import authorization
 from app.presentation.api.routers.users import router_user
 from app.infrastructure.database.database import Base, engine
+from app.infrastructure.database import models 
 from app.presentation.api.v1 import restaurants
 from app.presentation.api.routers.authentication import router_auth
 from app.presentation.api.v1 import checkout
 from app.presentation.api.v1 import orders
+
 
 app = FastAPI(title="munchmate")
 
@@ -18,7 +20,7 @@ app.include_router(router_user)
 
 #include authorization router
 app.include_router(router_auth)
-app.include_router(router)
+
 
 # Include restaurant router after authorization, making sure auth is checked before getting access to the restaurant endpoints
 app.include_router(restaurants.router)
