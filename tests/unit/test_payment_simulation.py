@@ -30,7 +30,7 @@ def setup_database():
     """Create tables and seed test data before each test, drop after."""
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
-    db.add(Order(id=1, customer_id=1, restaurant_id=1, status="pending"))
+    db.add(Order(order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0, tax=5.0, delivery_cost=5.0, total_cost=60.0))
     db.commit()
     db.close()
     yield
@@ -41,19 +41,19 @@ client = TestClient(app)
 
 
 def test_successful_payment():
-    """Check that a valid payment returns success and updates order status."""
-    response = client.post("/payments/simulate?order_id=1&amount=50")
+    """Check that a valid payment returns success."""
+    response = client.post("/payments/simulate?order_id=TEST001&amount=50")
     assert response.status_code == 200
     assert response.json()["payment_status"] == "success"
 
 
 def test_invalid_order_id():
     """Check that a non-existent order returns 404."""
-    response = client.post("/payments/simulate?order_id=999&amount=50")
+    response = client.post("/payments/simulate?order_id=FAKE999&amount=50")
     assert response.status_code == 404
 
 
 def test_invalid_amount():
     """Check that a non-positive amount returns 400."""
-    response = client.post("/payments/simulate?order_id=1&amount=0")
+    response = client.post("/payments/simulate?order_id=TEST001&amount=0")
     assert response.status_code == 400

@@ -9,9 +9,9 @@ router = APIRouter(prefix="/payments", tags=["payments"])
 
 
 @router.post("/simulate")
-def simulate_payment(order_id: int, amount: int, db: Session = Depends(get_db)):
+def simulate_payment(order_id: str, amount: int, db: Session = Depends(get_db)):
     """Simulate a payment attempt for an order."""
-    order = db.query(Order).filter(Order.id == order_id).first()
+    order = db.query(Order).filter(Order.order_id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
