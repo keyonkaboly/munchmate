@@ -28,6 +28,7 @@ class Restaurant(Base):
 
 class MenuItem(Base):
     __tablename__ = "menu_items"
+    id = Column(Integer, primary_key=True, index=True)
     
     # Using composite primary key here - name + restaurant_id together
     food_item = Column(String, primary_key=True)

@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.infrastructure.database.database import get_db
-from app.infrastructure.database.models import Base, Restaurant
+from app.infrastructure.database.models import Base, Restaurant, MenuItem
 
 # provides an isolated test database so real data is never affected
 TEST_DATABASE_URL = "sqlite:///./test.db"
@@ -27,7 +27,11 @@ def setup_database():
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
     restaurant = Restaurant(id=1, location="City_3", food_item="Pizza")
+    second_restaurant = Restaurant(id=2, location="City_8", food_item="Burger")
     db.add(restaurant)
+    db.add(second_restaurant)
+    menu_item = MenuItem(id=1, food_item="Pizza", restaurant_id=1, price=10)
+    db.add(menu_item)
     db.commit()
     db.close()
     yield
