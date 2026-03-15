@@ -50,4 +50,5 @@ class Order(Base):
     route_taken = Column(String, nullable=True)
     route_type = Column(String, nullable=True)
     route_efficiency = Column(Float, nullable=True)
+    status_updated_at = Column(String, nullable=True)
     

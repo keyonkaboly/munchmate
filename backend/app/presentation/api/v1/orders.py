@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.infrastructure.database.database import get_db
 from app.infrastructure.database.models import Order
 from app.presentation.schemas.delivery_schemas import OrderCreate, OrderResponse
+from datetime import datetime
 
 VALID_STATUSES = ["Pending", "Assigned", "In Transit", "Delivered"]
 router = APIRouter(prefix="/orders", tags=["orders"])
@@ -33,6 +34,7 @@ def update_order_status(order_id: int, status: str, db: Session = Depends(get_db
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     order.delivery_status = status
+    order.status_updated_at = datetime.now().isoformat()
     db.commit()
     db.refresh(order)
     return order
