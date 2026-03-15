@@ -21,7 +21,7 @@ def checkout_calculate(data: CheckoutRequest, db: Session = Depends(get_db)):
     return{"order_id": order.order_id, "subtotal": final_total["subtotal"], "tax": final_total["tax"], "delivery_cost": final_total["delivery_cost"], "total_cost": final_total["total_cost"]}
 
 """Calls calculate method from pricing service, ensures final totals to order and returns breakdown for checkout summary"""
-@router.post("/orders/{order_id}/place-order", response_model = CheckoutResponse)
+@router.post("/orders/{order_id}/place", response_model = CheckoutResponse)
 def place_order(order_id: str, db: Session = Depends(get_db)):
     order = db.query(Order).filter(Order.order_id == order_id).first()
 
