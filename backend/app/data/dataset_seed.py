@@ -76,7 +76,7 @@ def seed_order_data(result, db_session):
 
     for index, row in uniqueOrders.iterrows():
         order_id = str(row['order_id'])
-        user_id = int(row['customer_id'])
+        customer_id = int(row['customer_id'])
         restaurant_id = int(row['restaurant_id'])
         subtotal = float(row['order_value'])
         tax = round((subtotal) * (0.12), 2)
@@ -87,7 +87,7 @@ def seed_order_data(result, db_session):
         exist = db_session.query(Order).filter(Order.order_id == order_id).first()
 
         if not exist:
-            order = Order(order_id=order_id, user_id=user_id, restaurant_id=restaurant_id, subtotal=subtotal, tax=tax,delivery_cost=delivery_cost, total_cost=total_cost)
+            order = Order(order_id=order_id, customer_id=customer_id, restaurant_id=restaurant_id, subtotal=subtotal, tax=tax,delivery_cost=delivery_cost, total_cost=total_cost)
             db_session.add(order)
             order_count += 1
         

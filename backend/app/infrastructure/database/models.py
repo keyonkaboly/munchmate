@@ -42,7 +42,7 @@ class MenuItem(Base):
 class Order(Base):
     __tablename__ = "orders"
     order_id = Column(String, primary_key = True, index = True)
-    user_id = Column(Integer, ForeignKey("customers.id"), nullable = True)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable = True)
     restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable = False)
     subtotal = Column(Float, nullable = False, default = 0.0)
     tax = Column(Float, nullable = False, default = 0.0)
