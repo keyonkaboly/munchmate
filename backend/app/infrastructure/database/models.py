@@ -58,16 +58,6 @@ class Order(Base):
     route_type = Column(String, nullable=True)
     route_efficiency = Column(Float, nullable=True)
 
-    """Model representing a customer order."""
-class Order(Base):
-    __tablename__ = "orders"
-
-    id = Column(Integer, primary_key=True, index=True)
-    customer_id = Column(Integer, nullable=False)
-    restaurant_id = Column(Integer, nullable=False)
-    status = Column(String, default="pending", nullable=False)
-
-
 class Payment(Base):
     """Model representing a payment attempt for an order."""
 
