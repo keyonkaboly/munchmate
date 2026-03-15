@@ -46,7 +46,6 @@ class Order(Base):
     delivery_time = Column(String, nullable=True)
     delivery_time_actual = Column(Float, nullable=True)
     delivery_delay = Column(Float, nullable=True)
-    delivery_status = Column(String, default="Pending")
     route_taken = Column(String, nullable=True)
     route_type = Column(String, nullable=True)
     route_efficiency = Column(Float, nullable=True)

@@ -16,6 +16,7 @@ def override_get_db():
         yield db
     finally:
         db.close()
+
 app.dependency_overrides[get_db] = override_get_db
 
 @pytest.fixture(autouse=True)
@@ -46,7 +47,6 @@ def test_delivery_info_saved_and_retrievable():
     assert data["delivery_method"] == "Bike"
     assert data["delivery_distance"] == 2.5
     assert data["route_taken"] == "Route_1"
-    assert data["delivery_status"] == "Assigned"
 
 # delivery info is saved automatically when order is placed
 def test_delivery_info_saved_automatically_on_order_placement():
@@ -61,7 +61,6 @@ def test_delivery_info_saved_automatically_on_order_placement():
     data = response.json()
     assert data["order_id"] is not None
     assert data["delivery_method"] == "Car"
-    assert data["delivery_status"] == "Assigned"
 
 # delivery data remains accessible for lifetime of order
 def test_delivery_info_remains_accessible():
@@ -82,57 +81,3 @@ def test_delivery_info_remains_accessible():
 def test_get_nonexistent_order_returns_404():
     response = client.get("/orders/999")
     assert response.status_code == 404
-
-# verifies that delivery status changes to assigned
-def test_delivery_status_changes_to_assigned():
-    response = client.post("/orders/", json= {
-        "delivery_method": "Car",
-        "delivery_distance": 3.0,
-        "route_taken": "Route_4",
-        "route_type": "Car-only",
-        "route_efficiency": 0.80
-    })
-    assert response.status_code == 200
-    assert response.json()["delivery_status"] == "Assigned"
-
-# Verifies all valid status transitions work correctly
-def test_valid_status_transitions():
-    post_response = client.post("/orders/", json={
-        "delivery_method": "Bike",
-        "delivery_distance": 2.5,
-        "route_taken": "Route_1",
-        "route_type": "Bike-friendly",
-        "route_efficiency": 0.85
-    })
-    order_id = post_response.json()["order_id"]
-    for status in ["Assigned", "In Transit", "Delivered"]:
-        response = client.patch(f"/orders/{order_id}/status?status={status}")
-        assert response.status_code == 200
-        assert response.json()["delivery_status"] == status
-
-    # Verifies invalid status returns 400
-def test_invalid_status_returns_400():
-    post_response = client.post("/orders/", json={
-        "delivery_method": "Car",
-        "delivery_distance": 3.0,
-        "route_taken": "Route_2",
-        "route_type": "Car-only",
-        "route_efficiency": 0.75
-    })
-    order_id = post_response.json()["order_id"]
-    response = client.patch(f"/orders/{order_id}/status?status=InvalidStatus")
-    assert response.status_code == 400
-
-# Verifies each order has exactly one active status at a time
-def test_order_has_one_active_status():
-    post_response = client.post("/orders/", json={
-        "delivery_method": "Walk",
-        "delivery_distance": 1.0,
-        "route_taken": "Route_3",
-        "route_type": "Bike-friendly",
-        "route_efficiency": 0.90
-    })
-    order_id = post_response.json()["order_id"]
-    client.patch(f"/orders/{order_id}/status?status=In Transit")
-    response = client.get(f"/orders/{order_id}")
-    assert response.json()["delivery_status"] == "In Transit"
