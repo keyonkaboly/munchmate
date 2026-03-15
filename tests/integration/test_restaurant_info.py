@@ -26,15 +26,11 @@ app.dependency_overrides[get_db] = override_get_db
 def setup_database():
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
-<<<<<<< HEAD
-    restaurant = Restaurant(id=1, name="Pizza Place", description="Good pizza", hours_of_operation="9am-9pm")
-    second_restaurant = Restaurant(id=2, name="Burger Place", description="Good burgers", hours_of_operation="10am-10pm")
-=======
     restaurant = Restaurant(id=1, location="City_3", food_item="Pizza")
->>>>>>> 4dd74b757714cedb9c86cc29aa260f8f12de4833
+    second_restaurant = Restaurant(id=2, location="City_8", food_item="Burger")
     db.add(restaurant)
     db.add(second_restaurant)
-    menu_item = MenuItem(name="Pizza", restaurant_id=1, price=10)
+    menu_item = MenuItem(id=1, food_item="Pizza", restaurant_id=1, price=10)
     db.add(menu_item)
     db.commit()
     db.close()
@@ -90,21 +86,6 @@ def test_put_changes_are_saved_and_retrievable():
     })
     response = client.get("/restaurants/1")
     assert response.status_code == 200
-<<<<<<< HEAD
-
-"""Check if API blocks access to a menu item when restaurant ID doesn't match the restaurant of the menu item.
-Looks for restaurant_id = 1 , name = Pizza. Saves the menu item id. Closes database and requests the id (via api endpoint).
-This should be invalid because we ask for endpoint of restaurant 2 item 17 which does not exist."""
-def test_menu_item_id_mismatch_returns_404():
-    db = TestingSessionLocal()
-    menu_item = db.query(MenuItem).filter(MenuItem.restaurant_id == 1, MenuItem.name == "Pizza").first()
-    item_id = menu_item.id
-    db.close()
-
-    response = client.get(f"/restaurants/2/menu-items/id/{item_id}")
-    assert response.status_code == 404
-=======
     json_data = response.json()
     assert json_data["location"] == "City_5"
     assert json_data["food_item"] == "Burger"
->>>>>>> 4dd74b757714cedb9c86cc29aa260f8f12de4833

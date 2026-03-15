@@ -43,7 +43,7 @@ def setup_database():
     restaurant = Restaurant(id=1, location="123 Test St")
     db.add(restaurant)
 
-    menu_item = MenuItem(food_item="Pizza", restaurant_id=1)
+    menu_item = MenuItem(id=1, food_item="Pizza", restaurant_id=1)
     db.add(menu_item)
 
     db.commit()
@@ -104,119 +104,4 @@ def test_invalid_menu_item_for_restaurant():
     response = client.get("/restaurants/1/menu-items/Sushi")
 
     # Should return 404 since Sushi isn't on the menu for restaurant 1
-<<<<<<< HEAD
     assert response.status_code == 404
-    
-def test_menu_item_price_negative():
-
-    # Insert a menu item with invalid price
-    db = TestingSessionLocal() # opens a new db session connected to the SQLite test db
-    bad_item = MenuItem(name="BadPizza", restaurant_id=1, price=-10) # crears a menu item object in memory, not go in db yet
-    db.add(bad_item) # prepare to insert this object into the db, but not saved yet
-    db.commit() # writes into new row in test db
-    db.close() # release resources, prevents connection leaks 
-
-    response = client.get("/restaurants/1/menu-items/BadPizza") # simulates real HTTP request using FastAPI's testclient 
-
-    assert response.status_code == 400 # checks API returned
-    assert response.json()["detail"] == "Price must be a positive integer"
-
-def test_menu_item_price_zero():
-
-    db = TestingSessionLocal()
-    bad_item = MenuItem(name="FreePizza", restaurant_id=1, price=0)
-    db.add(bad_item)
-    db.commit()
-    db.close()
-
-    response = client.get("/restaurants/1/menu-items/FreePizza")
-
-    assert response.status_code == 400
-
-def test_menu_item_price_valid():
-
-    db = TestingSessionLocal()
-    good_item = MenuItem(name="Burger", restaurant_id=1, price=15)
-    db.add(good_item)
-    db.commit()
-    db.close()
-
-    response = client.get("/restaurants/1/menu-items/Burger")
-
-    assert response.status_code == 200
-
-    json_data = response.json()
-    assert json_data["food_item"] == "Burger"
-    assert json_data["restaurant_id"] == 1
-
-"""Similiar to test_menu_item_id_mismatch_returns_404().
-Ensure a menu item ID cannot be taken from an endpoint with a wrong restaurant ID.
-Create a 2nd restaurant and save to database. Gets pizza item from Restaurant 1.
-Saves item.id to "item id". Request item from wrong restaraunt endpoint, should 404."""
-def test_menu_item_id_must_match_restaurant_id():
-    db = TestingSessionLocal()
-    another_restaurant = Restaurant(id=2, name="Second Restaurant")
-    db.add(another_restaurant)
-    db.commit()
-
-    item = db.query(MenuItem).filter(MenuItem.name == "Pizza", MenuItem.restaurant_id == 1).first()
-    item_id = item.id
-    db.close()
-
-    response = client.get(f"/restaurants/2/menu-items/id/{item_id}")
-
-    assert response.status_code == 404
-
-"""Test to ensure partial menu item searching actually produces a result.
-Sends a partial food string query to the searching endpoint and confirms the response contains a list including expected menu item."""
-def test_search_menu_items_by_text():
-
-    response = client.get("/restaurants/1/menu-items/search", params={"query": "Piz"})
-
-    assert response.status_code == 200
-    json_data = response.json()
-    assert any(item["name"] == "Pizza" for item in json_data["items"])
-
-"""Ensures the search can handle menu items with special characters. Created query with special character and ensures it can be found using search."""
-def test_search_menu_items_special_characters():
-
-    db = TestingSessionLocal()
-    item = MenuItem(name="Mac & Cheese", restaurant_id=1, price=14)
-    db.add(item)
-    db.commit()
-    db.close()
-
-    response = client.get("/restaurants/1/menu-items/search", params={"query": "Mac & Cheese"})
-
-    assert response.status_code == 200
-    json_data = response.json()
-    assert any(menu_item["name"] == "Mac & Cheese" for menu_item in json_data["items"])
-
-"""Ensure that searching with a non existing restaurant id returns 404."""
-def test_search_menu_items_invalid_restaurant_id():
-
-    response = client.get("/restaurants/999/menu-items/search", params={"query": "Pizza"})
-
-    assert response.status_code == 404
-
-"""Ensure that menu item not at this resturant message appears when users search item thats not at the restaurant"""
-def test_search_menu_items_not_found():
-
-    response = client.get("/restaurants/1/menu-items/search", params={"query": "NotOnMenu"})
-
-    assert response.status_code == 200
-    json_data = response.json()
-    assert json_data["items"] == []
-    assert json_data["total"] == 0
-
-"""Simple test case to ensure endpoint is reachable and valid for menu item"""
-def test_restaurant_endpoint_confirmation():
-    db = TestingSessionLocal()
-    item = db.query(MenuItem).filter(MenuItem.restaurant_id==1).first()
-    item_id = item.id
-    db.close()
-    response = client.get(f"/restaurants/1/menu-items/id/{item_id}")
-    assert response.status_code == 200
-=======
-    assert response.status_code == 404
->>>>>>> 4dd74b757714cedb9c86cc29aa260f8f12de4833

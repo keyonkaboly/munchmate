@@ -5,9 +5,6 @@ from app.infrastructure.database.models import Restaurant, MenuItem
 
 def seed_restaurants(result, db_session):
     """Seed unique restaurants from the dataset into the database."""
-<<<<<<< HEAD
-    uniqueRestaurants = result[['restaurant_id', 'location']].drop_duplicates(subset=['restaurant_id'])
-=======
     CUISINE_MAP = {
     "Pizza": "Italian", "Pasta": "Italian",
     "Sushi": "Asian", "Briyani rice": "Asian", "Chicken rice": "Asian", "Dumplings": "Asian",
@@ -19,11 +16,10 @@ def seed_restaurants(result, db_session):
     "Beef pie": "Other", "Chicken pie": "Other"
 }
     
-    uniqueRestaurants = result[['restaurant_id', 'food_item']].drop_duplicates(subset=['restaurant_id'])
->>>>>>> 4dd74b757714cedb9c86cc29aa260f8f12de4833
+    unique_Restaurants = result[['restaurant_id', 'food_item']].drop_duplicates(subset=['restaurant_id'])
     restaurant_count = 0
 
-    for index, row in uniqueRestaurants.iterrows():
+    for index, row in unique_Restaurants.iterrows():
         restaurant_id = int(row['restaurant_id'])
         cuisine = CUISINE_MAP.get(row['food_item'], "Other")
         exist = db_session.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
@@ -32,16 +28,15 @@ def seed_restaurants(result, db_session):
             restaurant = Restaurant(id=restaurant_id, name=f"Restaurant {restaurant_id}", cuisine_type=cuisine)
             db_session.add(restaurant)
             restaurant_count += 1
-    db_session.commit()
     return restaurant_count
 
 
 def seed_menu_items(result, db_session):
     """Seed unique menu items per restaurant from the dataset."""
-    uniqueMenuItems = result[['restaurant_id', 'food_item']].drop_duplicates(subset=['restaurant_id', 'food_item'])
+    unique_MenuItems = result[['restaurant_id', 'food_item']].drop_duplicates(subset=['restaurant_id', 'food_item'])
     menu_item_count = 0
 
-    for index, row in uniqueMenuItems.iterrows():
+    for index, row in unique_MenuItems.iterrows():
         restaurant_id = int(row['restaurant_id'])
         food_item = str(row['food_item'])
 
@@ -54,8 +49,6 @@ def seed_menu_items(result, db_session):
             menu_item = MenuItem(restaurant_id=restaurant_id, name=food_item)
             db_session.add(menu_item)
             menu_item_count += 1
-
-    db_session.commit()
     return menu_item_count
 
 
@@ -67,6 +60,7 @@ def seed_dataset_data():
         result = load_dataset()
         restaurant_count = seed_restaurants(result, db_session)
         menu_item_count = seed_menu_items(result, db_session)
+        db_session.commit()
 
         print("Seeding complete.", restaurant_count, "restaurants seeded. ", menu_item_count, " menu items seeded.")
 
