@@ -19,7 +19,6 @@ TestingSessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=Fals
 def override_get_db():
 
     #override the db dependency to make sure that during test we don't mess with production data
-
     db = TestingSessionLocal()
     try:
         yield db
@@ -41,10 +40,10 @@ def setup_database():
 
     # add some test data
     db = TestingSessionLocal()
-    restaurant = Restaurant(id=1, name="Test Restaurant")
+    restaurant = Restaurant(id=1, location="123 Test St")
     db.add(restaurant)
 
-    menu_item = MenuItem(name="Pizza", restaurant_id=1, price=10)
+    menu_item = MenuItem(food_item="Pizza", restaurant_id=1)
     db.add(menu_item)
 
     db.commit()
@@ -70,7 +69,7 @@ def test_valid_restaurant_id():
 
     # Verify response body contains expected data
     json_data = response.json()
-    assert json_data["restaurant_id"] == 1
+    assert json_data["id"] == 1
 
 
 def test_invalid_restaurant_id():
@@ -105,6 +104,7 @@ def test_invalid_menu_item_for_restaurant():
     response = client.get("/restaurants/1/menu-items/Sushi")
 
     # Should return 404 since Sushi isn't on the menu for restaurant 1
+<<<<<<< HEAD
     assert response.status_code == 404
     
 def test_menu_item_price_negative():
@@ -217,3 +217,6 @@ def test_restaurant_endpoint_confirmation():
     db.close()
     response = client.get(f"/restaurants/1/menu-items/id/{item_id}")
     assert response.status_code == 200
+=======
+    assert response.status_code == 404
+>>>>>>> 4dd74b757714cedb9c86cc29aa260f8f12de4833

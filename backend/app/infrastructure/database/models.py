@@ -18,20 +18,21 @@ class Restaurant(Base):
     __tablename__ = "restaurants"
     
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
     location = Column(String, nullable=True)
-    description = Column(String, nullable=True)
-    hours_of_operation = Column(String, nullable=True)
+    food_item = Column(String, nullable=True)
     is_halal = Column(Boolean, default=False)
     is_vegetarian = Column(Boolean, default=False)
+    cuisine_type = Column(String, nullable=True)
+    # probably should add name, location fields here at some point
+
 
 class MenuItem(Base):
     __tablename__ = "menu_items"
     id = Column(Integer, primary_key=True, index=True)
     
-    # Update: ensure that same name/restaurant id cannot happen. Removed primary key. Can't be left null
-    name = Column(String, nullable=False)
-    restaurant_id = Column(Integer, nullable=False)
+    # Using composite primary key here - name + restaurant_id together
+    food_item = Column(String, primary_key=True)
+    restaurant_id = Column(Integer, primary_key=True)
     price = Column(Float, nullable=True)
     
     # This means each restaurant can have items with same name
