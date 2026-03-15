@@ -7,6 +7,7 @@ class OrderCreate(BaseModel):
     delivery_time: Optional[str] = None
     delivery_time_actual: Optional[float] = None
     delivery_delay: Optional[float] = None
+    delivery_status: Optional[str] = None
     route_taken: Optional[str] = None
     route_type: Optional[str] = None
     route_efficiency: Optional[float] = None
@@ -18,6 +19,7 @@ class OrderResponse(BaseModel):
     delivery_time: Optional[str] = None
     delivery_time_actual: Optional[float] = None
     delivery_delay: Optional[float] = None
+    delivery_status: Optional[str] = None
     route_taken: Optional[str] = None
     route_type: Optional[str] = None
     route_efficiency: Optional[float] = None

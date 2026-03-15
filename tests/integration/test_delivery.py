@@ -16,7 +16,6 @@ def override_get_db():
         yield db
     finally:
         db.close()
-
 app.dependency_overrides[get_db] = override_get_db
 
 @pytest.fixture(autouse=True)
@@ -47,6 +46,7 @@ def test_delivery_info_saved_and_retrievable():
     assert data["delivery_method"] == "Bike"
     assert data["delivery_distance"] == 2.5
     assert data["route_taken"] == "Route_1"
+    assert data["delivery_status"] == "Assigned"
 
 # delivery info is saved automatically when order is placed
 def test_delivery_info_saved_automatically_on_order_placement():
@@ -61,6 +61,7 @@ def test_delivery_info_saved_automatically_on_order_placement():
     data = response.json()
     assert data["order_id"] is not None
     assert data["delivery_method"] == "Car"
+    assert data["delivery_status"] == "Assigned"
 
 # delivery data remains accessible for lifetime of order
 def test_delivery_info_remains_accessible():
@@ -81,3 +82,15 @@ def test_delivery_info_remains_accessible():
 def test_get_nonexistent_order_returns_404():
     response = client.get("/orders/999")
     assert response.status_code == 404
+
+# verifies that delivery status changes to assigned
+def test_delivery_status_changes_to_assigned():
+    response = client.post("/orders/", json= {
+        "delivery_method": "Car",
+        "delivery_distance": 3.0,
+        "route_taken": "Route_4",
+        "route_type": "Car-only",
+        "route_efficiency": 0.80
+    })
+    assert response.status_code == 200
+    assert response.json()["delivery_status"] == "Assigned"
