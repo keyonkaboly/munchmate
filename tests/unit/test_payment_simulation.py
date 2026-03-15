@@ -4,8 +4,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
-from app.infrastructure.database.database import get_db
-from app.infrastructure.database.models import Base, Order
+from app.infrastructure.database.database import get_db, Base
+from app.infrastructure.database.models import Order, Payment
 
 
 TEST_DATABASE_URL = "sqlite:///./test_payment.db"
@@ -30,7 +30,15 @@ def setup_database():
     """Create tables and seed test data before each test, drop after."""
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
-    db.add(Order(order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0, tax=5.0, delivery_cost=5.0, total_cost=60.0))
+    db.add(Order(
+        order_id="TEST001",
+        customer_id=1,
+        restaurant_id=1,
+        subtotal=50.0,
+        tax=5.0,
+        delivery_cost=5.0,
+        total_cost=60.0
+    ))
     db.commit()
     db.close()
     yield
