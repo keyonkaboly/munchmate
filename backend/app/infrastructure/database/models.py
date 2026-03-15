@@ -26,6 +26,7 @@ class Restaurant(Base):
 
 class MenuItem(Base):
     __tablename__ = "menu_items"
+    id = Column(Integer, primary_key=True, index=True)
     
     # Using composite primary key here - name + restaurant_id together
     food_item = Column(String, primary_key=True)
@@ -48,3 +49,11 @@ class Order(Base):
     tax = Column(Float, nullable = False, default = 0.0)
     delivery_cost = Column(Float, nullable = False, default = 5.0)
     total_cost = Column(Float, nullable = False, default = 0.0)
+    delivery_method = Column(String, nullable=True)
+    delivery_distance = Column(Float, nullable=True)
+    delivery_time = Column(String, nullable=True)
+    delivery_time_actual = Column(Float, nullable=True)
+    delivery_delay = Column(Float, nullable=True)
+    route_taken = Column(String, nullable=True)
+    route_type = Column(String, nullable=True)
+    route_efficiency = Column(Float, nullable=True)

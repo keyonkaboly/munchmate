@@ -19,7 +19,7 @@ def seed_restaurants(result, db_session):
     uniqueRestaurants = result[['restaurant_id', 'food_item', 'location']].drop_duplicates(subset=['restaurant_id'])
     restaurant_count = 0
 
-    for index, row in uniqueRestaurants.iterrows():
+    for index, row in unique_Restaurants.iterrows():
         restaurant_id = int(row['restaurant_id'])
         cuisine = CUISINE_MAP.get(row['food_item'], "Other")
         location = str(row['location'])
@@ -40,7 +40,6 @@ def seed_restaurants(result, db_session):
             )
             db_session.add(restaurant)
             restaurant_count += 1
-    db_session.commit()
     return restaurant_count
 
 
@@ -49,7 +48,7 @@ def seed_menu_items(result, db_session):
     uniqueMenuItems = result[['restaurant_id', 'food_item', 'order_value']].drop_duplicates(subset=['restaurant_id', 'food_item'])
     menu_item_count = 0
 
-    for index, row in uniqueMenuItems.iterrows():
+    for index, row in unique_MenuItems.iterrows():
         restaurant_id = int(row['restaurant_id'])
         food_item = str(row['food_item'])
         price = float(row['order_value'])
@@ -65,8 +64,6 @@ def seed_menu_items(result, db_session):
             menu_item = MenuItem(restaurant_id=restaurant_id, food_item=food_item, price=price, is_halal=is_halal, is_vegetarian=is_vegetarian)
             db_session.add(menu_item)
             menu_item_count += 1
-
-    db_session.commit()
     return menu_item_count
 
 """Seed unique menu items per restaurant from the dataset. For orders we calculate total cost (rnd to 2 decimal)."""
