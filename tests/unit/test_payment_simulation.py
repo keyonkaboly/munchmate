@@ -4,11 +4,11 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
-from app.infrastructure.database.database import get_db, Base
-from app.infrastructure.database.models import Order, Payment
+from app.infrastructure.database.database import get_db
+from app.infrastructure.database.models import Base, Order, Payment
 
 
-TEST_DATABASE_URL = "sqlite:///./test_payment.db"
+TEST_DATABASE_URL = "sqlite:///./test.db"
 engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
 TestingSessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
@@ -27,20 +27,8 @@ app.dependency_overrides[get_db] = override_get_db
 
 @pytest.fixture(autouse=True)
 def setup_database():
-    """Create tables and seed test data before each test, drop after."""
+    """Create tables before each test and drop after."""
     Base.metadata.create_all(bind=engine)
-    db = TestingSessionLocal()
-    db.add(Order(
-        order_id="TEST001",
-        customer_id=1,
-        restaurant_id=1,
-        subtotal=50.0,
-        tax=5.0,
-        delivery_cost=5.0,
-        total_cost=60.0
-    ))
-    db.commit()
-    db.close()
     yield
     Base.metadata.drop_all(bind=engine)
 
@@ -50,6 +38,11 @@ client = TestClient(app)
 
 def test_successful_payment():
     """Check that a valid payment returns success."""
+    db = TestingSessionLocal()
+    db.add(Order(order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
+    db.commit()
+    db.close()
+
     response = client.post("/payments/simulate?order_id=TEST001&amount=50")
     assert response.status_code == 200
     assert response.json()["payment_status"] == "success"
@@ -63,5 +56,10 @@ def test_invalid_order_id():
 
 def test_invalid_amount():
     """Check that a non-positive amount returns 400."""
+    db = TestingSessionLocal()
+    db.add(Order(order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
+    db.commit()
+    db.close()
+
     response = client.post("/payments/simulate?order_id=TEST001&amount=0")
     assert response.status_code == 400
