@@ -36,6 +36,7 @@ class Restaurant(Base):
 
 class MenuItem(Base):
     __tablename__ = "menu_items"
+    id = Column(Integer, primary_key=True, index=True)
     
     # Using composite primary key here - name + restaurant_id together
     food_item = Column(String, primary_key=True)
@@ -45,3 +46,16 @@ class MenuItem(Base):
     # This means each restaurant can have items with same name
     # but the combination of name+restaurant_id must be unique
     # Not sure if this is the best approach tbh, might want to reconsider using an id field instead
+
+class Order(Base):
+    __tablename__ = "orders"
+    order_id = Column(Integer, primary_key=True, index=True)
+    delivery_method = Column(String, nullable=True)
+    delivery_distance = Column(Float, nullable=True)
+    delivery_time = Column(String, nullable=True)
+    delivery_time_actual = Column(Float, nullable=True)
+    delivery_delay = Column(Float, nullable=True)
+    route_taken = Column(String, nullable=True)
+    route_type = Column(String, nullable=True)
+    route_efficiency = Column(Float, nullable=True)
+    
