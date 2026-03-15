@@ -45,6 +45,12 @@ def login(credentials: UserLogin):
     token = create_access_token(data={"sub": user["email"]})
     return {"access_token": token, "token_type": "bearer"}
 
+# this is a protected route so it requires a valid JWT token
 @router_auth.get("/me")
 def get_profile(current_user: str = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+        )
     return {"user": current_user}
