@@ -23,7 +23,6 @@ def simulate_payment(order_id: str, amount: int, db: Session = Depends(get_db)):
 
     payment = Payment(order_id=order_id, status="success", amount=amount)
     db.add(payment)
-    order.status = "paid"
     db.commit()
 
     return {"message": "Payment successful", "order_id": order_id, "payment_status": "success"}
