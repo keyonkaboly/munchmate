@@ -44,7 +44,7 @@ class MenuItem(Base):
 """Base class for order. note: ForeignKey is used to referencing row in diff table """
 class Order(Base):
     __tablename__ = "orders"
-    order_id = Column(String, primary_key = True, index = True)
+    order_id = Column(Integer, primary_key = True, index = True)
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable = True)
     restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable = False)
     subtotal = Column(Float, nullable = False, default = 0.0)
@@ -59,3 +59,12 @@ class Order(Base):
     route_taken = Column(String, nullable=True)
     route_type = Column(String, nullable=True)
     route_efficiency = Column(Float, nullable=True)
+    
+
+class OrderItem(Base):
+    __tablename__ = "order_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(Integer, ForeignKey("orders.order_id"), nullable=False)
+    menu_item_id = Column(Integer, ForeignKey("menu_items.id"), nullable=False)
+    quantity = Column(Integer, nullable=False)
