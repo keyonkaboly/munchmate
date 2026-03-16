@@ -1,0 +1,19 @@
+Date: March 12, 2026
+Sprint #: 3
+
+1. What did we push since the last meeting?
+- Restaurant info was added, kaggle dataset is now being seeded out of the food delivery csv properly. Currently taking food_item, location, and restaurant_id. Validation of restaurant IDs has been pushed. Feature 2 nearly complete, 95%. Feature 1 nearly complete. Feature 3 50% complete.
+- Changed restaurant info parameters to match given dataset (location, id, menu_item)
+- Added dietary filters such as halal and vegetarian by classify the finite number of food items to types of filters
+- Smooth to implement filtration for cuisine type afterwards because abstraction was used to create filter method 
+- Added password hashing 
+- Added a token function for login
+
+2. What are we working on for this sprint?
+- Finish Feature 1, and 2 and 3.
+- Global search bar, restaurant specific and system wide searches and pagination.
+- Finish Feature 4, 5, 6.
+- Working on calculations of order cost meaning we’ll need to derive from the .csv again and grab the item costs of each food item and use those.
+- Add restaurant manager user type inheriting from base class of user.
+- Working on Feature 5 which includes assigning delivery information to orders 
+- Bit of feature 7 for simulating processing payments 

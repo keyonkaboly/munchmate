@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from app.presentation.schemas.user_schemas import UserCreate, UserLogin, UserResponse
+from app.presentation.schemas.user_schemas import UserCreate, UserLogin, UserResponse, RestaurantManagerCreate, RestaurantManagerResponse
 from app.infrastructure.database.models import Customer
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
@@ -33,3 +33,19 @@ def create_user(
     
     
     return new_user
+
+"""Creating restaurant manager. Try to commit to db and refresh is fails bc. of duplicate user/email"""
+@router_user.post("/restaurant-managers", response_model=RestaurantManagerResponse)
+def create_restaurant_manager(user: RestaurantManagerCreate, db: Session = Depends(get_db)):
+    new_restaurant_manager = Customer(email=user.email, username=user.username, password_hash=user.password, user_type="restaurant_manager", restaurant_manager_restaurant_id=user.restaurant_manager_restaurant_id)
+
+    db.add(new_restaurant_manager)
+
+    try:
+        db.commit()
+        db.refresh(new_restaurant_manager)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Email or username already exists")
+
+    return new_restaurant_manager
