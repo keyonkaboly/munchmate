@@ -3,7 +3,7 @@ from app.presentation.schemas.payment_schemas import PaymentRequest, PaymentResp
 from app.application.services.payment_service import simulate_payment
 from sqlalchemy.orm import Session
 from app.infrastructure.database.database import get_db
-from app.infrastructure.database.models import Order
+from app.infrastructure.database.models import Order, Payment
 from app.application.services.payment_service import simulate_payment
 
 router = APIRouter(prefix="/payments", tags=["payments"])
