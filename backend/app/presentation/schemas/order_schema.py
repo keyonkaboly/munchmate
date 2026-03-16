@@ -1,11 +1,10 @@
 from pydantic import BaseModel, Field
 from typing import List
 
-class OrderItemCreate(BaseModel):
-    menu_item_id: int
-    quantity: int = Field(gt=0)
-    
 class OrderCreate(BaseModel):
+    order_id: str
     customer_id: int
     restaurant_id: int
-    items: List[OrderItemCreate]
+    food_items: List[str]
+    order_value: float
+    
