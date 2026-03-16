@@ -8,3 +8,4 @@ class OrderCreate(BaseModel):
     food_items: List[str]
     order_value: float
     
+    
