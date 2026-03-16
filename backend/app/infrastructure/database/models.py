@@ -59,3 +59,6 @@ class Order(Base):
     route_taken = Column(String, nullable=True)
     route_type = Column(String, nullable=True)
     route_efficiency = Column(Float, nullable=True)
+    order_value = Column(Float, nullable=True)
+    food_item = Column(String, nullable=True)
+    
