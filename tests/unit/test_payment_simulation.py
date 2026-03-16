@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.infrastructure.database.database import get_db
-from app.infrastructure.database.models import Base, Order, Payment
+from app.infrastructure.database.models import Base, Order
 
 
 TEST_DATABASE_URL = "sqlite:///./test.db"
@@ -38,28 +38,32 @@ client = TestClient(app)
 
 def test_successful_payment():
     """Check that a valid payment returns success."""
-    db = TestingSessionLocal()
-    db.add(Order(order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
-    db.commit()
-    db.close()
-
-    response = client.post("/payments/simulate?order_id=TEST001&amount=50")
+    response = client.post("/payments/", json={
+        "order_id": 1,
+        "total_price": 50.0,
+        "card_number": "4111111111111111"
+    })
     assert response.status_code == 200
-    assert response.json()["payment_status"] == "success"
+    assert response.json()["success"] is True
 
 
-def test_invalid_order_id():
-    """Check that a non-existent order returns 404."""
-    response = client.post("/payments/simulate?order_id=FAKE999&amount=50")
-    assert response.status_code == 404
+def test_declined_card():
+    """Check that a card ending in 0000 is declined."""
+    response = client.post("/payments/", json={
+        "order_id": 1,
+        "total_price": 50.0,
+        "card_number": "4111111110000"
+    })
+    assert response.status_code == 200
+    assert response.json()["success"] is False
 
 
 def test_invalid_amount():
-    """Check that a non-positive amount returns 400."""
-    db = TestingSessionLocal()
-    db.add(Order(order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
-    db.commit()
-    db.close()
-
-    response = client.post("/payments/simulate?order_id=TEST001&amount=0")
-    assert response.status_code == 400
+    """Check that a non-positive amount returns failed payment."""
+    response = client.post("/payments/", json={
+        "order_id": 1,
+        "total_price": 0.0,
+        "card_number": "4111111111111111"
+    })
+    assert response.status_code == 200
+    assert response.json()["success"] is False
