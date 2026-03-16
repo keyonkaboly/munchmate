@@ -42,19 +42,19 @@ def test_calculate_tax():
     assert result == 2.73
     
 def test_order_not_found():
-    response = client.post(f"/checkout/calculate", json = {"order_id": "Str1ng"})
+    response = client.post(f"/checkout/calculate", json = {"order_id": 999})
     assert response.status_code == 404
 
 def test_checkout_calculate_success():
     db = TestingSessionLocal()
-    order = Order(order_id="Str1ng", customer_id=1, restaurant_id=1, subtotal=22.79)
+    order = Order(order_id=1, customer_id=1, restaurant_id=1, subtotal=22.79)
 
     db.add(order)
     db.commit()
     db.close()
 
     result = calculate_order_total(22.79)
-    response = client.post("/checkout/calculate", json={"order_id":"Str1ng"})
+    response = client.post("/checkout/calculate", json={"order_id": 1})
 
     assert response.status_code == 200
-    assert response.json() == {"order_id":"Str1ng", "subtotal":result["subtotal"], "tax":result["tax"], "delivery_cost":result["delivery_cost"],"total_cost":result["total_cost"]}
+    assert response.json() == {"order_id": 1, "subtotal":result["subtotal"], "tax":result["tax"], "delivery_cost":result["delivery_cost"],"total_cost":result["total_cost"]}

@@ -8,10 +8,10 @@ class CartItemResponse(BaseModel):
     price: float
 
 class CartRequest(BaseModel):
-    order_id: str
+    order_id: int
 
 class CartResponse(BaseModel):
-    order_id: str
+    order_id: int
     items: List[CartItemResponse]
     subtotal: float
     tax: float
@@ -19,10 +19,10 @@ class CartResponse(BaseModel):
     total_cost: float
 
 class CheckoutRequest(BaseModel):
-    order_id: str
+    order_id: int
 
 class CheckoutResponse(BaseModel):
-    order_id: str
+    order_id: int
     subtotal: float
     tax: float
     delivery_cost: float

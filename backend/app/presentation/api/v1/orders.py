@@ -9,15 +9,7 @@ router = APIRouter(prefix="/orders", tags=["orders"])
 """Create order method. Ensures every new order gets a valid unique ID before commiting to database so inserts succeed"""
 @router.post("/", response_model=OrderResponse) 
 def create_order(data: OrderCreate, db: Session = Depends(get_db)):
-    existing_order_ids = db.query(Order.order_id).all()
-    numeric_order_ids = [
-        int(value[0])
-        for value in existing_order_ids
-        if value[0] is not None and str(value[0]).isdigit()
-    ]
-    next_order_id = str(max(numeric_order_ids) + 1) if numeric_order_ids else "1"
-
-    order = Order(order_id=next_order_id, restaurant_id=1, **data.model_dump())
+    order = Order(restaurant_id=1, **data.model_dump())
     db.add(order)
     db.commit()
     db.refresh(order)
