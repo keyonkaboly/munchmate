@@ -21,7 +21,6 @@ app.include_router(router_user)
 
 #include authorization router
 app.include_router(router_auth)
-app.include_router(router)
 
 # Include restaurant router after authorization, making sure auth is checked before getting access to the restaurant endpoints
 app.include_router(restaurants.router)
