@@ -6,6 +6,9 @@ from app.presentation.api.v1 import restaurants
 from app.presentation.api.routers.authentication import router_auth
 
 
+from app.presentation.api.v1 import checkout
+from app.presentation.api.v1 import orders
+from app.presentation.api.v1 import payments
 
 app = FastAPI(title="munchmate")
 
@@ -18,9 +21,17 @@ app.include_router(router_user)
 
 #include authorization router
 app.include_router(router_auth)
+app.include_router(router)
 
-# Include restaunrant router after authorization, making sure auth is checked before getting access to the resstaurant endpoints
-app.include_router(restaurants.router)             
+# Include restaurant router after authorization, making sure auth is checked before getting access to the restaurant endpoints
+app.include_router(restaurants.router)
+
+app.include_router(checkout.router)
+
+# registers routes defined in orders.py with main FastAPI
+app.include_router(orders.router)
+
+app.include_router(payments.router)
 
 # Creates endpoint
 @app.get("/")

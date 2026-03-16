@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.infrastructure.database.models import Customer
-from backend.app.infrastructure.security.hash__password import hash_password, verify_password
+from app.infrastructure.security.hash__password import hash_password, verify_password
 
 
 

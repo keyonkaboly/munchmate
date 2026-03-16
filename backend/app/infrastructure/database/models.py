@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean
+from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey
 from .database import Base
 
 class Customer(Base):
@@ -18,22 +18,42 @@ class Restaurant(Base):
     __tablename__ = "restaurants"
     
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    description = Column(String, nullable=True)
-    hours_of_operation = Column(String, nullable=True)
+    location = Column(String, nullable=True)
+    food_item = Column(String, nullable=True)
     is_halal = Column(Boolean, default=False)
     is_vegetarian = Column(Boolean, default=False)
-    # probably should add name, location fields here at some point
-
+    cuisine_type = Column(String, nullable=True)
 
 class MenuItem(Base):
     __tablename__ = "menu_items"
+    id = Column(Integer, primary_key=True, index=True)
     
     # Using composite primary key here - name + restaurant_id together
-    name = Column(String, primary_key=True)
+    food_item = Column(String, primary_key=True)
     restaurant_id = Column(Integer, primary_key=True)
     price = Column(Float, nullable=True)
+    is_halal = Column(Boolean, default=False)
+    is_vegetarian = Column(Boolean, default=False)
     
     # This means each restaurant can have items with same name
     # but the combination of name+restaurant_id must be unique
     # Not sure if this is the best approach tbh, might want to reconsider using an id field instead
+
+"""Base class for order. note: ForeignKey is used to referencing row in diff table """
+class Order(Base):
+    __tablename__ = "orders"
+    order_id = Column(String, primary_key = True, index = True)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable = True)
+    restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable = False)
+    subtotal = Column(Float, nullable = False, default = 0.0)
+    tax = Column(Float, nullable = False, default = 0.0)
+    delivery_cost = Column(Float, nullable = False, default = 5.0)
+    total_cost = Column(Float, nullable = False, default = 0.0)
+    delivery_method = Column(String, nullable=True)
+    delivery_distance = Column(Float, nullable=True)
+    delivery_time = Column(String, nullable=True)
+    delivery_time_actual = Column(Float, nullable=True)
+    delivery_delay = Column(Float, nullable=True)
+    route_taken = Column(String, nullable=True)
+    route_type = Column(String, nullable=True)
+    route_efficiency = Column(Float, nullable=True)
