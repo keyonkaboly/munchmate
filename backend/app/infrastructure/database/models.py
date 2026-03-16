@@ -59,3 +59,14 @@ class Order(Base):
     route_taken = Column(String, nullable=True)
     route_type = Column(String, nullable=True)
     route_efficiency = Column(Float, nullable=True)
+
+class Notification(Base):
+    """Model representing a notification sent to a user."""
+
+    __tablename__ = "notifications"
+    id = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(Integer, nullable=False)
+    order_id = Column(String, nullable=False)
+    message = Column(String, nullable=False)
+    notification_type = Column(String, nullable=False)
+    is_read = Column(Boolean, default=False)
