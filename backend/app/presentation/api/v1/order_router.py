@@ -3,12 +3,14 @@ from sqlalchemy.orm import Session
 from app.infrastructure.database.database import get_db
 from app.infrastructure.database.models import Order, MenuItem, OrderItem
 from app.presentation.schemas.order_schema import OrderCreate
+import uuid
 
 router_order = APIRouter(prefix="/orders", tags=["orders"])
 
 @router_order.post("/create")
 def create_order_with_items(order: OrderCreate, db: Session = Depends(get_db)):
     new_order = Order(
+        order_id=str(uuid.uuid4()),
         customer_id=order.customer_id,
         restaurant_id=order.restaurant_id
     )
