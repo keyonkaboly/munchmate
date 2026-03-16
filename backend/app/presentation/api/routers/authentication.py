@@ -38,7 +38,7 @@ def login(credentials: UserLogin):
     if not verify_password(credentials.password, user["hashed_password"]):
         raise HTTPException(
             status_code = status.HTTP_401_UNAUTHORIZED,
-            detail="invalid email email or password"
+            detail="invalid email or password"
         )
     
     token = create_access_token(data={"sub": user["email"]})
