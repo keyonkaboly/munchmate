@@ -5,6 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.infrastructure.database.database import get_db
 from app.infrastructure.database.models import Base, Order
+from app.infrastructure.database.models import Base, Order, Restaurant, MenuItem
 
 TEST_DATABASE_URL = "sqlite:///./test.db"
 engine = create_engine(
@@ -27,11 +28,26 @@ app.dependency_overrides[get_db] = override_get_db
 
 @pytest.fixture(autouse=True)
 def setup_database():
-    Base.metadata.drop_all(bind=engine) 
-    Base.metadata.create_all(bind=engine)
-    yield
     Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
 
+    db = TestingSessionLocal()
+
+    # create restaurant
+    restaurant = Restaurant(id=1, location="Test Location")
+    db.add(restaurant)
+
+    # create menu items
+    db.add(MenuItem(food_item="Pizza", restaurant_id=1, price=10.0))
+    db.add(MenuItem(food_item="Burger", restaurant_id=1, price=8.0))
+
+    db.commit()
+    db.close()
+
+    yield
+
+    Base.metadata.drop_all(bind=engine)
+    
 
 client = TestClient(app)
 
@@ -86,7 +102,4 @@ def test_create_order_with_no_food_items():
         "food_items": [],
         "order_value": 0.0
     })
-    assert response.status_code == 200
-    json_data = response.json()
-    # Expect no rows created for empty food_items
-    assert json_data.get("row_ids") == [] or json_data.get("order_ids") == []
+    assert response.status_code == 422
