@@ -6,6 +6,7 @@ from app.presentation.api.v1 import restaurants
 from app.presentation.api.v1 import checkout
 from app.presentation.api.v1 import orders
 from app.presentation.api.v1 import payments
+from app.presentation.api.v1 import search
 
 app = FastAPI(title="munchmate")
 
@@ -24,6 +25,7 @@ app.include_router(checkout.router)
 app.include_router(orders.router)
 
 app.include_router(payments.router)
+app.include_router(search.router)
 
 # Creates endpoint
 @app.get("/")
