@@ -3,8 +3,8 @@ from app.presentation.schemas.payment_schemas import PaymentRequest, PaymentResp
 from app.application.services.payment_service import simulate_payment
 from sqlalchemy.orm import Session
 from app.infrastructure.database.database import get_db
-from app.infrastructure.database.models import Order
 from app.application.services.payment_service import simulate_payment
+from app.infrastructure.database.models import Order, Payment
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
@@ -32,3 +32,20 @@ def checkout(data: PaymentRequest, db: Session = Depends(get_db)):
         success=result["success"],
         message=result["message"]
     )
+
+@router.get("/confirmation/{order_id}")
+def get_payment_confirmation(order_id: int, db: Session = Depends(get_db)):
+    """Return confirmation message if payment was successful for an order."""
+    payment = db.query(Payment).filter(
+        Payment.order_id == order_id,
+        Payment.status == "success"
+    ).first()
+
+    if not payment:
+        raise HTTPException(status_code=404, detail="No successful payment found for this order")
+
+    return {
+        "message": "Payment confirmed",
+        "order_id": order_id,
+        "status": "Paid / Confirmed"
+    }
