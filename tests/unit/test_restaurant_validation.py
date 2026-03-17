@@ -43,7 +43,7 @@ def setup_database():
     restaurant = Restaurant(id=1, location="123 Test St")
     db.add(restaurant)
 
-    menu_item = MenuItem(food_item="Pizza", restaurant_id=1)
+    menu_item = MenuItem(id=1, food_item="Pizza", restaurant_id=1)
     db.add(menu_item)
 
     db.commit()
