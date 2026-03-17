@@ -63,4 +63,16 @@ class Order(Base):
     route_efficiency = Column(Float, nullable=True)
     order_value = Column(Float, nullable=True)
     food_item = Column(String, nullable=True)
+
+class Payment(Base):
+    """Model representing a payment attempt for an order."""
+
+    __tablename__ = "payments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(Integer, nullable=False)
+    status = Column(String, nullable=False)
+    amount = Column(Integer, nullable=False)
+    order_value = Column(Float, nullable=True)
+    food_item = Column(String, nullable=True)
     
