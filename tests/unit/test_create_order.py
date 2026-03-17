@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.infrastructure.database.database import get_db
-from app.infrastructure.database.models import Base, Order
+from app.infrastructure.database.models import Base, Order, Restaurant, MenuItem
 
 TEST_DATABASE_URL = "sqlite:///./test.db"
 engine = create_engine(
@@ -27,8 +27,16 @@ app.dependency_overrides[get_db] = override_get_db
 
 @pytest.fixture(autouse=True)
 def setup_database():
-    Base.metadata.drop_all(bind=engine) 
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+
+    db = TestingSessionLocal()
+    db.add(Restaurant(id=1, cuisine_type="Italian"))
+    db.add(MenuItem(restaurant_id=1, food_item="Pizza"))
+    db.add(MenuItem(restaurant_id=1, food_item="Burger"))
+    db.commit()
+    db.close()
+
     yield
     Base.metadata.drop_all(bind=engine)
 
@@ -45,13 +53,11 @@ def test_create_order_with_single_food_item():
     })
     assert response.status_code == 200
     json_data = response.json()
-    # check the key that actually exists in the response
     assert "order_ids" in json_data
     assert json_data["order_ids"] == ["order123_pizza"]
 
 
 def test_create_order_with_multiple_food_items():
-    # First item
     response1 = client.post("/orders/create", json={
         "order_id": "order123_pizza",
         "customer_id": 1,
@@ -64,7 +70,6 @@ def test_create_order_with_multiple_food_items():
     assert "order_ids" in json1
     assert json1["order_ids"] == ["order123_pizza"]
 
-    
     response2 = client.post("/orders/create", json={
         "order_id": "order123_burger",
         "customer_id": 1,
@@ -88,5 +93,4 @@ def test_create_order_with_no_food_items():
     })
     assert response.status_code == 200
     json_data = response.json()
-    # Expect no rows created for empty food_items
     assert json_data.get("row_ids") == [] or json_data.get("order_ids") == []
