@@ -2,8 +2,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.infrastructure.database.database import get_db
-from app.infrastructure.database.models import Restaurant, MenuItem
-from app.presentation.schemas.restaurant_schemas import RestaurantUpdate, RestaurantResponse
+from app.infrastructure.database.models import Restaurant, MenuItem, Order, Customer
+from app.presentation.schemas.restaurant_schemas import RestaurantUpdate, RestaurantResponse, MenuItemNameUpdate
 from app.utils.filters import apply_dietary_filters
 from app.utils.pagination import paginate
 
@@ -57,6 +57,15 @@ def search_menu_items(
     )
     return paginate(search_query, page=page, page_size=page_size)
 
+"""Getting order by using order_id"""
+@router.get("/{order_id}", response_model=RestaurantResponse)
+def get_order(order_id: str, db: Session = Depends(get_db)):
+    exist = db.query(Order).filter(Order.order_id == order_id).first()
+
+    if exist is None:
+        raise HTTPException(status_code=404, detail="Order not found.")
+       
+    return exist
 
 @router.get("/{restaurant_id}/menu-items/{food_item}")
 def get_menu_item(restaurant_id: int, food_item: str, db: Session = Depends(get_db)):
@@ -104,3 +113,29 @@ def update_restaurant(restaurant_id: int, data: RestaurantUpdate, db: Session = 
     db.commit()
     db.refresh(restaurant)
     return restaurant
+
+@router.put("/{restaurant_id}/menu-items/{food_item}")
+def rename_menu_item(restaurant_id: int, food_item: str, data: MenuItemNameUpdate, manager_user_id: int = Query(...), db: Session = Depends(get_db)):
+    manager = db.query(Customer).filter(Customer.id == manager_user_id).first()
+    if not manager or manager.user_type != "restaurant_manager":
+        raise HTTPException(status_code=403, detail="Only restaurant managers can perform this action")
+
+    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restaurant ID not found")
+
+    menu_item = db.query(MenuItem).filter(MenuItem.restaurant_id == restaurant_id, MenuItem.food_item == food_item).first()
+
+    if not menu_item:
+        raise HTTPException(status_code=404, detail="Menu item not found")
+
+    exists = db.query(MenuItem).filter(MenuItem.restaurant_id == restaurant_id, MenuItem.food_item == data.food_item).first()
+
+    if exists and data.food_item != food_item:
+        raise HTTPException(status_code=409, detail="Menu item name already exists with this restaurant id ")
+
+    menu_item.food_item = data.food_item
+    db.commit()
+    db.refresh(menu_item)
+
+    return {"restaurant_id": restaurant_id, "food_item": menu_item.food_item}
