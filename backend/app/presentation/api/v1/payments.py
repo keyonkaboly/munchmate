@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.infrastructure.database.database import get_db
 from app.infrastructure.database.models import Order, Payment
 from app.application.services.payment_service import simulate_payment
+from app.infrastructure.database.models import Order, Payment
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
