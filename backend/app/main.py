@@ -6,6 +6,8 @@ from app.presentation.api.v1 import restaurants
 from app.presentation.api.v1 import checkout
 from app.presentation.api.v1 import orders
 from app.presentation.api.v1 import payments
+from app.presentation.api.v1 import notifications
+from app.presentation.api.v1.order_router import router_order
 
 app = FastAPI(title="munchmate")
 
@@ -23,7 +25,16 @@ app.include_router(checkout.router)
 # registers routes defined in orders.py with main FastAPI
 app.include_router(orders.router)
 
+# registers routes defined in payments.py with main FastAPI
 app.include_router(payments.router)
+
+# registers routes defined in notifications.py with main FastAPI
+app.include_router(notifications.router)
+
+#create an order:
+app.include_router(router_order)
+
+
 
 # Creates endpoint
 @app.get("/")
