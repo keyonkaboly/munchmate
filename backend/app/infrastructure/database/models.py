@@ -61,6 +61,19 @@ class Order(Base):
     route_taken = Column(String, nullable=True)
     route_type = Column(String, nullable=True)
     route_efficiency = Column(Float, nullable=True)
+    order_value = Column(Float, nullable=True)
+    food_item = Column(String, nullable=True)
+
+
+class Payment(Base):
+    """Model representing a payment attempt for an order."""
+
+    __tablename__ = "payments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(String, nullable=False)
+    status = Column(String, nullable=False)
+    amount = Column(Integer, nullable=False)
 
 class Notification(Base):
     """Model representing a notification sent to a user."""
