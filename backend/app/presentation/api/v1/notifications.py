@@ -52,3 +52,25 @@ def notify_delivery_status(order_id: str, customer_id: int, status: str, db: Ses
         "customer_id": customer_id,
         "status": status
     }
+
+@router.post("/order-cancelled")
+def notify_order_cancelled(order_id: str, customer_id: int, db: Session = Depends(get_db)):
+    """Send a notification when an order is cancelled."""
+    order = db.query(Order).filter(Order.order_id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    notification = Notification(
+        customer_id=customer_id,
+        order_id=order_id,
+        message=f"Your order {order_id} has been cancelled.",
+        notification_type="order_cancelled"
+    )
+    db.add(notification)
+    db.commit()
+
+    return {
+        "message": f"Order {order_id} has been cancelled",
+        "notification_type": "order_cancelled",
+        "customer_id": customer_id
+    }
