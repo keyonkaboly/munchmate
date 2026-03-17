@@ -44,7 +44,9 @@ class MenuItem(Base):
 """Base class for order. note: ForeignKey is used to referencing row in diff table """
 class Order(Base):
     __tablename__ = "orders"
-    order_id = Column(String, primary_key = True, index = True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    order_id = Column(String, index = True)
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable = True)
     restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable = False)
     subtotal = Column(Float, nullable = False, default = 0.0)
@@ -59,3 +61,14 @@ class Order(Base):
     route_taken = Column(String, nullable=True)
     route_type = Column(String, nullable=True)
     route_efficiency = Column(Float, nullable=True)
+
+class Notification(Base):
+    """Model representing a notification sent to a user."""
+
+    __tablename__ = "notifications"
+    id = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(Integer, nullable=False)
+    order_id = Column(String, nullable=False)
+    message = Column(String, nullable=False)
+    notification_type = Column(String, nullable=False)
+    is_read = Column(Boolean, default=False)
