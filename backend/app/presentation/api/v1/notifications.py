@@ -29,3 +29,26 @@ def notify_order_created(order_id: str, customer_id: int, db: Session = Depends(
         "notification_type": "order_created",
         "customer_id": customer_id
     }
+
+@router.get("/history/{customer_id}")
+def get_notification_history(customer_id: int, db: Session = Depends(get_db)):
+    """Retrieve all notifications for a specific customer."""
+    notifications = db.query(Notification).filter(
+        Notification.customer_id == customer_id
+    ).all()
+
+    if not notifications:
+        return {"notifications": [], "message": "No notifications found for this customer"}
+
+    return {
+        "notifications": [
+            {
+                "id": n.id,
+                "order_id": n.order_id,
+                "message": n.message,
+                "notification_type": n.notification_type,
+                "is_read": n.is_read
+            }
+            for n in notifications
+        ]
+    }
