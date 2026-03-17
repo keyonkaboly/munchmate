@@ -6,21 +6,31 @@ from app.presentation.schemas.order_schema import OrderCreate
 
 router_order = APIRouter(prefix="/orders", tags=["orders"])
 
+# helper func
+def get_order_or_404(order_id: str, db: Session) -> Order:
+    order = db.query(Order).filter(Order.order_id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    return order
+
+# shared validation
+def validate_menu_item(restaurant_id: str, food_item: str, db: Session):
+    exists = db.query(MenuItem).filter(
+        MenuItem.restaurant_id == restaurant_id,
+        MenuItem.food_item == food_item
+    ).first()
+    if not exists:
+        raise HTTPException(
+            status_code=404,
+            detail=f"'{food_item}' does not exist on this restaurant's menu"
+        )
+
 @router_order.post("/create")
 def create_order(order: OrderCreate, db: Session = Depends(get_db)):
    
    # this validate that items exist on the restaurant menu
     for item in order.food_items:
-        exists = db.query(MenuItem).filter(
-            MenuItem.restaurant_id == order.restaurant_id,
-            MenuItem.food_item == item
-        ).first()
-
-        if not exists:
-            raise HTTPException(
-                status_code=404,
-                detail=f"'{item}' does not exist on this restaurant's menu"
-            )
+        validate_menu_item(order.restaurant_id, item, db)
    
     created_orders = []
     
@@ -39,23 +49,12 @@ def create_order(order: OrderCreate, db: Session = Depends(get_db)):
 
     return {"message": "Order created successfully", "order_ids": created_orders}
 
+
 @router_order.post("/{order_id}/add-item")
 def add_item(order_id: str, food_item: str, db: Session = Depends(get_db)):
-    order = db.query(Order).filter(Order.order_id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
+    order = get_order_or_404(order_id, db)
     
-    menu_exists = db.query(MenuItem).filter(
-        MenuItem.restaurant_id == order.restaurant_id
-    ).first()
-
-    if menu_exists:
-        exists = db.query(MenuItem).filter(
-            MenuItem.food_item == food_item,
-            MenuItem.restaurant_id == order.restaurant_id
-        ).first()
-        if not exists:
-            raise HTTPException(status_code=404, detail=f"'{food_item}' does not exist on this restaurant's menu")
+    validate_menu_item(order.restaurant_id, food_item, db)
     
     new_item = Order(
         order_id=order_id,
@@ -69,8 +68,11 @@ def add_item(order_id: str, food_item: str, db: Session = Depends(get_db)):
     return {"message": f"'{food_item}' added to order {order_id}"}
 
 
+
 @router_order.delete("/{order_id}/remove-item")
 def remove_item(order_id: str, food_item: str, db: Session = Depends(get_db)):
+    order = get_order_or_404(order_id, db)
+    
     item = db.query(Order).filter(
         Order.order_id == order_id,
         Order.food_item == food_item
@@ -85,6 +87,7 @@ def remove_item(order_id: str, food_item: str, db: Session = Depends(get_db)):
 
 @router_order.patch("/{order_id}/update-item")
 def update_item_quantity(order_id: str, food_item: str, quantity: int, db: Session = Depends(get_db)):
+    order = get_order_or_404(order_id, db)
     
     #this validates that the quanity is positive
     if quantity < 0:
@@ -100,11 +103,11 @@ def update_item_quantity(order_id: str, food_item: str, quantity: int, db: Sessi
 
     current_qty = len(items)
 
-    if quantity <= 0:
+    if quantity == 0:
         for item in items:
             db.delete(item)
     elif quantity > current_qty:
-        # Add more rows
+        
         for _ in range(quantity - current_qty):
             db.add(Order(
                 order_id=order_id,
@@ -114,7 +117,7 @@ def update_item_quantity(order_id: str, food_item: str, quantity: int, db: Sessi
                 food_item=food_item
             ))
     elif quantity < current_qty:
-        # Remove excess rows
+       
         for item in items[quantity:]:
             db.delete(item)
 
