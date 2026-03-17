@@ -51,6 +51,8 @@ def get_notification_history(customer_id: int, db: Session = Depends(get_db)):
             }
             for n in notifications
         ]
+    }
+
 @router.post("/delivery-status")
 def notify_delivery_status(order_id: str, customer_id: int, status: str, db: Session = Depends(get_db)):
     """Send a notification when delivery status changes."""
