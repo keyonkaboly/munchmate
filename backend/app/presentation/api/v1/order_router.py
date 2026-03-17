@@ -123,3 +123,28 @@ def update_item_quantity(order_id: str, food_item: str, quantity: int, db: Sessi
 
     db.commit()
     return {"message": f"'{food_item}' quantity updated to {quantity}"}
+
+# order validation
+def validate_order(order_id: str, db: Session):
+    items = db.query(Order).filter(Order.order_id == order_id).all()
+
+    if not items:
+        raise HTTPException(status_code=400, detail="Order has no items")
+
+    for item in items:
+        validate_menu_item(item.restaurant_id, item.food_item, db)
+
+    return items
+
+@router_order.post("/{order_id}/submit")
+def submit_order(order_id: str, db: Session = Depends(get_db)):
+    items = validate_order(order_id, db)
+
+    if items[0].status == "submitted":
+        raise HTTPException(status_code=400, detail="Order already submitted")
+
+    for item in items:
+        item.status = "submitted"
+
+    db.commit()
+    return {"message": f"Order {order_id} submitted successfully"}
