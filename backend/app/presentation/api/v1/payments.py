@@ -34,7 +34,7 @@ def checkout(data: PaymentRequest, db: Session = Depends(get_db)):
     )
 
 @router.get("/confirmation/{order_id}")
-def get_payment_confirmation(order_id: int, db: Session = Depends(get_db)):
+def get_payment_confirmation(order_id: str, db: Session = Depends(get_db)):
     """Return confirmation message if payment was successful for an order."""
     payment = db.query(Payment).filter(
         Payment.order_id == order_id,
