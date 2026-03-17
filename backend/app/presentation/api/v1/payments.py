@@ -4,8 +4,6 @@ from app.application.services.payment_service import simulate_payment
 from sqlalchemy.orm import Session
 from app.infrastructure.database.database import get_db
 from app.infrastructure.database.models import Order, Payment
-from app.application.services.payment_service import simulate_payment
-from app.infrastructure.database.models import Order, Payment
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
@@ -71,3 +69,20 @@ def retry_payment(order_id: str, amount: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Retry successful", "order_id": order_id, "payment_status": "success"}
+
+@router.get("/confirmation/{order_id}")
+def get_payment_confirmation(order_id: str, db: Session = Depends(get_db)):
+    """Return confirmation message if payment was successful for an order."""
+    payment = db.query(Payment).filter(
+        Payment.order_id == order_id,
+        Payment.status == "success"
+    ).first()
+
+    if not payment:
+        raise HTTPException(status_code=404, detail="No successful payment found for this order")
+
+    return {
+        "message": "Payment confirmed",
+        "order_id": order_id,
+        "status": "Paid / Confirmed"
+    }
