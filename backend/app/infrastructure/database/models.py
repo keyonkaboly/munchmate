@@ -61,8 +61,6 @@ class Order(Base):
     route_taken = Column(String, nullable=True)
     route_type = Column(String, nullable=True)
     route_efficiency = Column(Float, nullable=True)
-<<<<<<< feature/f7-payment-confirmation
-
 
 class Payment(Base):
     """Model representing a payment attempt for an order."""
@@ -73,8 +71,3 @@ class Payment(Base):
     order_id = Column(String, nullable=False)
     status = Column(String, nullable=False)
     amount = Column(Integer, nullable=False)
-=======
-    order_value = Column(Float, nullable=True)
-    food_item = Column(String, nullable=True)
-    
->>>>>>> main
