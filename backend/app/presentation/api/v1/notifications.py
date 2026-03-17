@@ -30,6 +30,7 @@ def notify_order_created(order_id: str, customer_id: int, db: Session = Depends(
         "customer_id": customer_id
     }
 
+
 @router.post("/order-cancelled")
 def notify_order_cancelled(order_id: str, customer_id: int, db: Session = Depends(get_db)):
     """Send a notification when an order is cancelled."""
