@@ -8,9 +8,6 @@ load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-if SECRET_KEY is None:
-    raise RuntimeError("Missing SECRET_KEY")
-
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
