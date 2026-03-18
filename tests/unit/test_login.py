@@ -4,6 +4,9 @@ from fastapi import FastAPI
 
 from app.presentation.api.v1.authentication import router_auth
 from app.infrastructure.database.database import Base, engine
+from jose import jwt
+from app.infrastructure.security.hashing import SECRET_KEY, ALGORITHM
+
 
 app = FastAPI()
 app.include_router(router_auth)
@@ -37,10 +40,15 @@ def test_login_success():
     response = client.post("/auth/login", json=login_payload)
 
     assert response.status_code == 200
-    data = response.json()
-    assert data["message"] == "Login successful"
-    assert data["user"]["email"] == "loginuser@example.com"
-    assert data["user"]["username"] == "loginuser"
+    assert response.json()["message"] == "Login successful"
+
+    assert "access_token" in response.cookies
+    token = response.cookies.get("access_token")
+    assert token is not None
+
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    assert payload["sub"] == "loginuser@example.com"
+    assert "exp" in payload
 
 
 def test_login_invalid_password():
@@ -74,3 +82,4 @@ def test_login_nonexistent_email():
 
     assert response.status_code == 401
     assert response.json()["detail"] == "Invalid email or password"
+
