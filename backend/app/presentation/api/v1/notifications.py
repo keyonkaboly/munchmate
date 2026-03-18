@@ -26,6 +26,6 @@ def notify_order_created(order_id: str, customer_id: int, db: Session = Depends(
 
     return {
         "message": f"Order {order_id} confirmed",
-        "notification_type": "order_created",
+        "notification_type": "order_confirmed",
         "customer_id": customer_id
     }
