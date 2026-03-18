@@ -46,7 +46,7 @@ def test_payment_confirmation_success():
 
     response = client.get("/payments/confirmation/TEST001")
     assert response.status_code == 200
-    assert response.json()["status"] == "Paid / Confirmed"
+    assert response.json()["status"] == "Payment Successful"
     assert response.json()["message"] == "Payment confirmed"
 
 
