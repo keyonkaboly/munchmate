@@ -8,7 +8,7 @@ from app.infrastructure.database.models import Order, Notification
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
 
-@router.post("/order-created")
+@router.post("/order-confirmed")
 def notify_order_created(order_id: str, customer_id: int, db: Session = Depends(get_db)):
     """Send a notification when a new order is created."""
     order = db.query(Order).filter(Order.order_id == order_id).first()
@@ -19,7 +19,7 @@ def notify_order_created(order_id: str, customer_id: int, db: Session = Depends(
         customer_id=customer_id,
         order_id=order_id,
         message=f"Your order {order_id} has been confirmed.",
-        notification_type="order_created"
+        notification_type="order_confirmed"
     )
     db.add(notification)
     db.commit()
