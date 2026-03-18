@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 class OrderCreate(BaseModel):
+    order_id: str
     delivery_method: Optional[str] = None
     delivery_distance: Optional[float] = None
     delivery_time: Optional[str] = None
@@ -12,7 +13,7 @@ class OrderCreate(BaseModel):
     route_efficiency: Optional[float] = None
 
 class OrderResponse(BaseModel):
-    order_id: int
+    order_id: str
     delivery_method: Optional[str] = None
     delivery_distance: Optional[float] = None
     delivery_time: Optional[str] = None
