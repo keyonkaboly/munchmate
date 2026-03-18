@@ -30,6 +30,7 @@ client = TestClient(app)
 # delivery info is saved and can be retrieved
 def test_delivery_info_saved_and_retrievable():
     post_response = client.post("/orders/", json={
+        "order_id": "Str1ng",
         "delivery_method": "Bike",
         "delivery_distance": 2.5,
         "delivery_time": "2024-01-31",
@@ -51,6 +52,7 @@ def test_delivery_info_saved_and_retrievable():
 # delivery info is saved automatically when order is placed
 def test_delivery_info_saved_automatically_on_order_placement():
     response = client.post("/orders/", json={
+        "order_id": "Str1ng",
         "delivery_method": "Car",
         "delivery_distance": 5.0,
         "route_taken": "Route_2",
@@ -65,6 +67,7 @@ def test_delivery_info_saved_automatically_on_order_placement():
 # delivery data remains accessible for lifetime of order
 def test_delivery_info_remains_accessible():
     post_response = client.post("/orders/", json={
+        "order_id": "Str1ng",
         "delivery_method": "Walk",
         "delivery_distance": 1.0,
         "route_taken": "Route_3",
