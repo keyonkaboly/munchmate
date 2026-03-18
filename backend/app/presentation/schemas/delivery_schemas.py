@@ -3,6 +3,7 @@ from typing import Optional
 
 class OrderCreate(BaseModel):
     order_id: str
+    restaurant_id: int
     delivery_method: Optional[str] = None
     delivery_distance: Optional[float] = None
     delivery_time: Optional[str] = None

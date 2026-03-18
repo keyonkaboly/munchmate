@@ -13,8 +13,7 @@ def create_order(data: OrderCreate, db: Session = Depends(get_db)):
     if existing_order:
         raise HTTPException(status_code=409, detail="Order ID already exists")
 
-    order_data = data.model_dump(exclude={"order_id"})
-    order = Order(order_id=data.order_id, restaurant_id=1, **order_data)
+    order = Order(**data.model_dump())
     db.add(order)
     db.commit()
     db.refresh(order)

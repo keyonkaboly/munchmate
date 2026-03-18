@@ -95,6 +95,7 @@ def test_checkout_success():
     # first create an order
     order_response = client.post("/orders/", json={
         "order_id": "Str1ng",
+        "restaurant_id": 1,
         "delivery_method": "Bike",
         "delivery_distance": 2.5,
         "route_taken": "Route_1",
@@ -125,6 +126,7 @@ def test_checkout_order_not_found():
 def test_checkout_accepts_valid_input():
     order_response = client.post("/orders/", json={
         "order_id": "Str1ng",
+        "restaurant_id": 1,
         "delivery_method": "Car",
         "delivery_distance": 3.0,
         "route_taken": "Route_2",
