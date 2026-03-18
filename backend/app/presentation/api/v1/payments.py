@@ -92,5 +92,5 @@ def get_payment_confirmation(order_id: str, db: Session = Depends(get_db)):
     return {
         "message": "Payment confirmed",
         "order_id": order_id,
-        "status": "Paid / Confirmed"
+        "status": "Payment Successful"
     }
