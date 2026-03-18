@@ -61,6 +61,6 @@ def test_order_created_notification_correct_customer():
     db.commit()
     db.close()
 
-    response = client.post("/notifications/order-created?order_id=TEST001&customer_id=1")
+    response = client.post("/notifications/order-confirmed?order_id=TEST001&customer_id=1")
     assert response.status_code == 200
     assert response.json()["customer_id"] == 1
