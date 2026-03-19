@@ -19,7 +19,7 @@ def seed_restaurants(result, db_session):
     uniqueRestaurants = result[['restaurant_id', 'food_item', 'location']].drop_duplicates(subset=['restaurant_id'])
     restaurant_count = 0
 
-    for index, row in unique_Restaurants.iterrows():
+    for index, row in uniqueRestaurants.iterrows():
         restaurant_id = int(row['restaurant_id'])
         cuisine = CUISINE_MAP.get(row['food_item'], "Other")
         location = str(row['location'])
@@ -48,7 +48,7 @@ def seed_menu_items(result, db_session):
     uniqueMenuItems = result[['restaurant_id', 'food_item', 'order_value']].drop_duplicates(subset=['restaurant_id', 'food_item'])
     menu_item_count = 0
 
-    for index, row in unique_MenuItems.iterrows():
+    for index, row in uniqueMenuItems.iterrows():
         restaurant_id = int(row['restaurant_id'])
         food_item = str(row['food_item'])
         price = float(row['order_value'])
@@ -68,7 +68,8 @@ def seed_menu_items(result, db_session):
 
 """Seed unique menu items per restaurant from the dataset. For orders we calculate total cost (rnd to 2 decimal)."""
 def seed_order_data(result, db_session):
-    uniqueOrders = result[['order_id', 'customer_id', 'restaurant_id', 'order_value']].drop_duplicates(subset=['order_id'])
+    uniqueOrders = result[['order_id', 'customer_id', 'restaurant_id', 'order_value', 'food_item', 'delivery_method', 'delivery_distance', 'delivery_delay',
+                            'route_taken', 'route_type', 'route_efficiency' ]].drop_duplicates(subset=['order_id'])
     order_count = 0
 
     for index, row in uniqueOrders.iterrows():
@@ -80,11 +81,17 @@ def seed_order_data(result, db_session):
         delivery_cost = 5.00
         total_cost = round(subtotal + tax + delivery_cost, 2)
     
+        delivery_method = str(row['delivery_method'])
+        delivery_distance = float(row['delivery_distance'])
+        delivery_delay = float(row['delivery_delay'])
+        route_taken = str(row['route_taken'])
+        route_type = str(row['route_type'])
+        route_efficiency = float(row['route_efficiency'])
 
         exist = db_session.query(Order).filter(Order.order_id == order_id).first()
 
         if not exist:
-            order = Order(order_id=order_id, customer_id=customer_id, restaurant_id=restaurant_id, subtotal=subtotal, tax=tax,delivery_cost=delivery_cost, total_cost=total_cost)
+            order = Order(order_id=order_id, customer_id=customer_id, restaurant_id=restaurant_id, subtotal=subtotal, tax=tax,delivery_cost=delivery_cost, total_cost=total_cost, food_item=food_item, delivery_cost=delivery_cost, delivery_method=delivery_method, delivery_distance=delivery_distance, delivery_delay=delivery_delay, route_taken=route_taken, route_type=route_type, route_efficiency=route_efficiency, status="seeded")
             db_session.add(order)
             order_count += 1
         
