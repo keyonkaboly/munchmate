@@ -55,7 +55,8 @@ def test_order_valid_items_are_accepted():
         "order_value": 18.0
     })
     assert response.status_code == 200
-    assert len(response.json()["order_ids"]) == 2
+    assert "order_id" in response.json()  
+    assert response.json()["message"] == "Order created successfully"
 
 
 def test_order_invalid_item_is_rejected():
