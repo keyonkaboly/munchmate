@@ -39,7 +39,7 @@ client = TestClient(app)
 def test_successful_payment():
     """Check that a valid payment returns success."""
     response = client.post("/payments/", json={
-        "order_id": 1,
+        "order_id": "Str1ng",
         "total_price": 50.0,
         "card_number": "4111111111111111"
     })
@@ -50,7 +50,7 @@ def test_successful_payment():
 def test_declined_card():
     """Check that a card ending in 0000 is declined."""
     response = client.post("/payments/", json={
-        "order_id": 1,
+        "order_id": "Str1ng",
         "total_price": 50.0,
         "card_number": "4111111110000"
     })
@@ -61,7 +61,7 @@ def test_declined_card():
 def test_invalid_amount():
     """Check that a non-positive amount returns failed payment."""
     response = client.post("/payments/", json={
-        "order_id": 1,
+        "order_id": "Str1ng",
         "total_price": 0.0,
         "card_number": "4111111111111111"
     })
