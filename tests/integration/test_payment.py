@@ -84,24 +84,12 @@ def test_payment_simulation_only():
 
 
 def test_checkout_success():
-<<<<<<< HEAD
     # create order via new endpoint
     order_response = client.post("/orders/create", json={
         "customer_id": 1,
         "restaurant_id": 1,
         "food_items": ["Pizza"],
         "order_value": 25.99
-=======
-    # first create an order
-    order_response = client.post("/orders/", json={
-        "order_id": "Str1ng",
-        "restaurant_id": 1,
-        "delivery_method": "Bike",
-        "delivery_distance": 2.5,
-        "route_taken": "Route_1",
-        "route_type": "Bike-friendly",
-        "route_efficiency": 0.85
->>>>>>> d6c637b2c51f8182a86834a44a45831c379c3d6c
     })
     assert order_response.status_code == 200
     order_id = order_response.json()["order_id"]
@@ -127,22 +115,11 @@ def test_checkout_order_not_found():
 
 
 def test_checkout_accepts_valid_input():
-<<<<<<< HEAD
     order_response = client.post("/orders/create", json={
         "customer_id": 1,
         "restaurant_id": 1,
         "food_items": ["Pizza"],
         "order_value": 50.00
-=======
-    order_response = client.post("/orders/", json={
-        "order_id": "Str1ng",
-        "restaurant_id": 1,
-        "delivery_method": "Car",
-        "delivery_distance": 3.0,
-        "route_taken": "Route_2",
-        "route_type": "Car-only",
-        "route_efficiency": 0.75
->>>>>>> d6c637b2c51f8182a86834a44a45831c379c3d6c
     })
     assert order_response.status_code == 200
     order_id = order_response.json()["order_id"]
