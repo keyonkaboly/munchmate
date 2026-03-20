@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.infrastructure.database.database import get_db
-from app.infrastructure.database.models import Base, Order, Restaurant, MenuItem
+from app.infrastructure.database.models import Base, Order, Restaurant, MenuItem, Customer
 
 TEST_DATABASE_URL = "sqlite:///./test.db"
 engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
@@ -24,6 +24,7 @@ def setup_database():
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
+    db.add(Customer(id="9c6dbfcb-72c5-4cc4-9f76-29200f0efda7"))
     db.add(Restaurant(id=1, cuisine_type="Italian"))
     db.add(MenuItem(restaurant_id=1, food_item="Pizza"))
     # seeded dataset row with delivery info
@@ -51,7 +52,7 @@ client = TestClient(app)
 def test_delivery_info_saved_and_retrievable():
     """Delivery info is assigned from seeded data when order is created."""
     response = client.post("/orders/create", json={
-        "customer_id": 1,
+        "customer_id": "9c6dbfcb-72c5-4cc4-9f76-29200f0efda7",
         "restaurant_id": 1,
         "food_items": ["Pizza"],
         "order_value": 12.5
@@ -73,7 +74,7 @@ def test_delivery_info_saved_and_retrievable():
 def test_delivery_info_saved_automatically_on_order_placement():
     """Delivery info is automatically stamped onto the order on creation."""
     response = client.post("/orders/create", json={
-        "customer_id": 1,
+        "customer_id": "9c6dbfcb-72c5-4cc4-9f76-29200f0efda7",
         "restaurant_id": 1,
         "food_items": ["Pizza"],
         "order_value": 12.5
@@ -94,7 +95,7 @@ def test_delivery_info_saved_automatically_on_order_placement():
 def test_delivery_info_remains_accessible():
     """Delivery info stays on the order after creation."""
     response = client.post("/orders/create", json={
-        "customer_id": 1,
+        "customer_id": "9c6dbfcb-72c5-4cc4-9f76-29200f0efda7",
         "restaurant_id": 1,
         "food_items": ["Pizza"],
         "order_value": 12.5

@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.infrastructure.database.database import get_db
-from app.infrastructure.database.models import Base, Restaurant, MenuItem
+from app.infrastructure.database.models import Base, Restaurant, MenuItem, Customer 
 
 TEST_DATABASE_URL = "sqlite:///./test.db"
 engine = create_engine(
@@ -28,6 +28,7 @@ def setup_database():
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
+    db.add(Customer(id="9c6dbfcb-72c5-4cc4-9f76-29200f0efda7"))
     db.add(Restaurant(id=1, cuisine_type="Italian"))
     db.add(MenuItem(restaurant_id=1, food_item="Pizza"))
     db.add(MenuItem(restaurant_id=1, food_item="Burger"))
@@ -39,7 +40,7 @@ def setup_database():
 
 def test_submit_valid_order():
     create_response = client.post("/orders/create", json={
-        "customer_id": 1,
+        "customer_id": "9c6dbfcb-72c5-4cc4-9f76-29200f0efda7",
         "restaurant_id": 1,
         "food_items": ["Pizza"],
         "order_value": 12.5
