@@ -8,9 +8,9 @@ class Customer(Base):
     # id is a unique identifier for each row in the table
     # None of these items are allowed to be null.
     id = Column(String, primary_key=True, index=True)
-    username = Column(String, unique=True, nullable=True)
-    email = Column(String, unique=True, nullable=True)
-    password_hash = Column(String, nullable=True)
+    username = Column(String, unique=True, nullable=False)
+    email = Column(String, unique=True, nullable=False)
+    password_hash = Column(String, nullable=False)
     user_type = Column(String, nullable=False, default="customer")
     restaurant_manager_restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable=True)
 

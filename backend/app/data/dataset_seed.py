@@ -16,10 +16,10 @@ def seed_restaurants(result, db_session):
     "Beef pie": "Other", "Chicken pie": "Other"
 }
     
-    uniqueRestaurants = result[['restaurant_id', 'food_item', 'location']].drop_duplicates(subset=['restaurant_id'])
+    unique_restaurants = result[['restaurant_id', 'food_item', 'location']].drop_duplicates(subset=['restaurant_id'])
     restaurant_count = 0
 
-    for index, row in uniqueRestaurants.iterrows():
+    for index, row in unique_restaurants.iterrows():
         restaurant_id = int(row['restaurant_id'])
         cuisine = CUISINE_MAP.get(row['food_item'], "Other")
         location = str(row['location'])
@@ -45,10 +45,10 @@ def seed_restaurants(result, db_session):
 
 def seed_menu_items(result, db_session):
     """Seed unique menu items per restaurant from the dataset."""
-    uniqueMenuItems = result[['restaurant_id', 'food_item', 'order_value']].drop_duplicates(subset=['restaurant_id', 'food_item'])
+    unique_menu_items = result[['restaurant_id', 'food_item', 'order_value']].drop_duplicates(subset=['restaurant_id', 'food_item'])
     menu_item_count = 0
 
-    for index, row in uniqueMenuItems.iterrows():
+    for index, row in unique_menu_items.iterrows():
         restaurant_id = int(row['restaurant_id'])
         food_item = str(row['food_item'])
         price = float(row['order_value'])
@@ -68,11 +68,11 @@ def seed_menu_items(result, db_session):
 
 """Seed unique menu items per restaurant from the dataset. For orders we calculate total cost (rnd to 2 decimal)."""
 def seed_order_data(result, db_session):
-    uniqueOrders = result[['order_id', 'customer_id', 'restaurant_id', 'order_value', 'food_item', 'delivery_method', 'delivery_distance', 'delivery_delay',
+    unique_orders = result[['order_id', 'customer_id', 'restaurant_id', 'order_value', 'food_item', 'delivery_method', 'delivery_distance', 'delivery_delay',
                             'route_taken', 'route_type', 'route_efficiency' ]].drop_duplicates(subset=['order_id'])
     order_count = 0
 
-    for index, row in uniqueOrders.iterrows():
+    for index, row in unique_orders.iterrows():
         order_id = str(row['order_id'])
         customer_id = str(row['customer_id'])
         restaurant_id = int(row['restaurant_id'])
@@ -124,14 +124,19 @@ def seed_dataset_data():
 def seed_customers(result, db_session):
     from app.infrastructure.database.models import Customer
     
-    uniqueCustomers = result[['customer_id']].drop_duplicates(subset=['customer_id'])
+    unique_customers = result[['customer_id']].drop_duplicates(subset=['customer_id'])
     customer_count = 0
 
-    for index, row in uniqueCustomers.iterrows():
+    for index, row in unique_customers.iterrows():
         customer_id = str(row['customer_id'])
         exist = db_session.query(Customer).filter(Customer.id == customer_id).first()
         if not exist:
-            customer = Customer(id=customer_id)
+            customer = Customer(
+                id=customer_id,
+                username=f"user_{customer_id[:8]}",
+                email=f"{customer_id[:8]}@placeholder.com",
+                password_hash="placeholder"
+            )
             db_session.add(customer)
             customer_count += 1
 
