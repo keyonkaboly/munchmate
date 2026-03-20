@@ -78,7 +78,7 @@ def get_most_restrictive_delivery(restaurant_id: int, food_items: list, db: Sess
     }
 
 
-def create_order(restaurant_id: int, food_items: list, order_value: float, customer_id: int, db: Session) -> dict:
+def create_order(restaurant_id: int, food_items: list, order_value: float, customer_id: str, db: Session) -> dict:
     for item in food_items:
         validate_menu_item(restaurant_id, item, db)
 

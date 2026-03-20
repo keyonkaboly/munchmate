@@ -74,7 +74,7 @@ def seed_order_data(result, db_session):
 
     for index, row in uniqueOrders.iterrows():
         order_id = str(row['order_id'])
-        customer_id = int(row['customer_id'])
+        customer_id = str(row['customer_id'])
         restaurant_id = int(row['restaurant_id'])
         subtotal = float(row['order_value'])
         tax = round((subtotal) * (0.12), 2)
@@ -120,3 +120,20 @@ def seed_dataset_data():
 
     finally:
         db_session.close()
+
+def seed_customers(result, db_session):
+    from app.infrastructure.database.models import Customer
+    
+    uniqueCustomers = result[['customer_id']].drop_duplicates(subset=['customer_id'])
+    customer_count = 0
+
+    for index, row in uniqueCustomers.iterrows():
+        customer_id = str(row['customer_id'])
+        exist = db_session.query(Customer).filter(Customer.id == customer_id).first()
+        if not exist:
+            customer = Customer(id=customer_id)
+            db_session.add(customer)
+            customer_count += 1
+
+    db_session.commit()
+    return customer_count
