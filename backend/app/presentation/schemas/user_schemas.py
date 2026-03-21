@@ -17,17 +17,6 @@ class UserResponse(UserBase):
     
     model_config = ConfigDict(from_attributes=True)
     
-class RegisterRequest(BaseModel):
-    username: str = Field(min_length=6, max_length=12)
-    email: EmailStr
-    password: str = Field(min_length=6)
-    role: Literal["customer", "restaurant_owner"]
-
-class RegisterResponse(BaseModel):
-    id: int
-    username: str
-    email: EmailStr
-    role: str
 
 class RestaurantManagerCreate(UserCreate):
     restaurant_manager_restaurant_id: int
