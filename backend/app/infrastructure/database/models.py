@@ -7,7 +7,7 @@ class Customer(Base):
     # Passwords can be the same, but usernames and emails must be unique
     # id is a unique identifier for each row in the table
     # None of these items are allowed to be null.
-    id = Column(String, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, nullable=False)
     email = Column(String, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
@@ -48,7 +48,7 @@ class Order(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     
     order_id = Column(String, index = True)
-    customer_id = Column(String, ForeignKey("customers.id"), nullable = True)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable = True)
     restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable = False)
     subtotal = Column(Float, nullable = False, default = 0.0)
     tax = Column(Float, nullable = False, default = 0.0)
