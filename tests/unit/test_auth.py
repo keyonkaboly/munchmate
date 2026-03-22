@@ -35,18 +35,18 @@ def test_register_customer_success():
     assert data["role"] == "customer"
 
 
-def test_register_restaurant_owner_success():
+def test_register_restaurant_manager_success():
     payload = {
         "email": "owner@example.com",
         "username": "owneruser",
         "password": "password123"
     }
 
-    response = client.post("/auth/register?role=restaurant_owner", json=payload)
+    response = client.post("/auth/register?role=restaurant_manager", json=payload)
 
     assert response.status_code == 200
     data = response.json()
-    assert data["role"] == "restaurant_owner"
+    assert data["role"] == "restaurant_manager"
 
 
 def test_register_invalid_email():

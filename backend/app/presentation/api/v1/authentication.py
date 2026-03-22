@@ -31,7 +31,7 @@ def register(
         username=user.username,
         email=user.email,
         password_hash=hashed_password,
-        user_type = "restaurant_manager" if (role == "restaurant_manager" or role == "restaurant_owner") else "customer"
+        user_type = role
     )
 
     db.add(new_user)
