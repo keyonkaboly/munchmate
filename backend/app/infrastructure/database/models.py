@@ -31,8 +31,9 @@ class MenuItem(Base):
     id = Column(Integer, primary_key=True, index=True)
     
     # Using composite primary key here - name + restaurant_id together
-    food_item = Column(String, primary_key=True)
-    restaurant_id = Column(Integer, primary_key=True)
+    food_item = Column(String, nullable=False)
+    
+    restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable=False)
     price = Column(Float, nullable=True)
     is_halal = Column(Boolean, default=False)
     is_vegetarian = Column(Boolean, default=False)
@@ -63,6 +64,8 @@ class Order(Base):
     route_efficiency = Column(Float, nullable=True)
     order_value = Column(Float, nullable=True)
     food_item = Column(String, nullable=True)
+    
+    status = Column(String, nullable=False, default="draft")
 
 class Payment(Base):
     """Model representing a payment attempt for an order."""
@@ -70,9 +73,6 @@ class Payment(Base):
     __tablename__ = "payments"
 
     id = Column(Integer, primary_key=True, index=True)
-    order_id = Column(Integer, nullable=False)
+    order_id = Column(String, nullable=False)
     status = Column(String, nullable=False)
     amount = Column(Integer, nullable=False)
-    order_value = Column(Float, nullable=True)
-    food_item = Column(String, nullable=True)
-    

@@ -1,22 +1,33 @@
 from pydantic import BaseModel,EmailStr, Field, ConfigDict
-
-#this file is for user schemas, which will be used for user registration and login
+from typing import Literal
+    
 class UserBase(BaseModel):
     username: str = Field(min_length=6, max_length=12) #username must be between 6 to 12 characters
-    email: EmailStr = Field(max_length=50)
+    email: EmailStr
     
 class UserCreate(UserBase):
     password: str = Field(min_length=6)
     
-class UserLogin(UserBase):
-    username: str
+class UserLogin(BaseModel):
+    email: EmailStr
     password: str
     
 class UserResponse(UserBase):
     id: int
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+class RegisterRequest(BaseModel):
+    username: str = Field(min_length=6, max_length=12)
+    email: EmailStr
+    password: str = Field(min_length=6)
+    role: Literal["customer", "restaurant_owner"]
+
+class RegisterResponse(BaseModel):
+    id: int
     username: str
     email: EmailStr
-
+    role: str
 
 class RestaurantManagerCreate(UserCreate):
     restaurant_manager_restaurant_id: int
