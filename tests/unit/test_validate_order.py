@@ -23,13 +23,13 @@ def override_get_db():
     finally:
         db.close()
 
-
-app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
 def setup_database():
+    previous_overrides = app.dependency_overrides.copy()
+    app.dependency_overrides[get_db] = override_get_db
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
 
@@ -43,29 +43,26 @@ def setup_database():
     yield
 
     Base.metadata.drop_all(bind=engine)
+    app.dependency_overrides = previous_overrides
 
 
 def test_order_valid_items_are_accepted():
     """Valid menu items -> order is created successfully."""
     response = client.post("/orders/create", json={
-        "order_id": "order-1",
         "customer_id": 1,
         "restaurant_id": 1,
-        "food_items": ["Pizza", "Burger"],
-        "order_value": 18.0
+        "food_items": ["Pizza", "Burger"]
     })
     assert response.status_code == 200
-    assert len(response.json()["order_ids"]) == 2
+    assert response.json()["count"] == 2
 
 
 def test_order_invalid_item_is_rejected():
     """Item not on the menu -> 404 with the item name in the error."""
     response = client.post("/orders/create", json={
-        "order_id": "order-2",
         "customer_id": 1,
         "restaurant_id": 1,
-        "food_items": ["Sushi"],
-        "order_value": 12.0
+        "food_items": ["Sushi"]
     })
     assert response.status_code == 404
     assert "Sushi" in response.json()["detail"]
