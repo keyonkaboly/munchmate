@@ -14,7 +14,6 @@ class Customer(Base):
     user_type = Column(String, nullable=False, default="customer")
     restaurant_manager_restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable=True)
 
-
 # Restaurant table definition
 class Restaurant(Base):
     __tablename__ = "restaurants"
@@ -47,7 +46,7 @@ class Order(Base):
     __tablename__ = "orders"
     id = Column(Integer, primary_key=True, autoincrement=True)
     
-    order_id = Column(String, index = True, nullable=True)
+    order_id = Column(String, index = True)
     
     combined_order_id = Column(String, index=True, nullable=True)
     
