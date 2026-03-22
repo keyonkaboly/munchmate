@@ -1,0 +1,16 @@
+Date: March 21, 2026 (End of day we had a meeting)
+Sprint: # 5
+
+1. What did we push since the last meeting?
+- F8 is essentially completed with all the endpoints as well as unit tests PyTests passing.
+- Submitted F7 and F8 PRs that went through multiple rounds of review
+- Feature 3 fully finished, Feature 6 updated calculations for multiple food_items in the order, finished.
+- Added timestamps for orders and simulated user input for payment testing 
+- Integration tests for payment simulation 
+- Finished f1 sr4, sr5 & sr6 – Finished rest of Feature 1, now complete
+- Finished f4 sr4 & sr5 & sr6 – Finished rest of Feature 4, now complete
+
+2. What are we working on for this sprint?
+- Merging and approving F7 and F8 PRs
+- Getting any last minute reviews on PR’s in
+- Finishing final changes, removing all comments in any instances of code as per Professor Gema’s lecture instructions. Keeping docstrings though 
