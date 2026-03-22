@@ -88,15 +88,13 @@ def get_notification_history(customer_id: int, db: Session = Depends(get_db)):
     if not notifications:
         return {"notifications": [], "message": "No notifications found for this customer"}
 
-    return {
-        "notifications": [
-            {
-                "id": n.id,
-                "order_id": n.order_id,
-                "message": n.message,
-                "notification_type": n.notification_type,
-                "is_read": n.is_read
-            }
-            for n in notifications
-        ]
-    }
+    notification_list = []
+    for n in notifications:
+        notification_list.append({
+            "id": n.id,
+            "order_id": n.order_id,
+            "message": n.message,
+            "notification_type": n.notification_type,
+            "is_read": n.is_read
+            })
+        return {"notifications": notification_list}
