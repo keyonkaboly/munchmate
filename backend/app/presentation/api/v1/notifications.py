@@ -96,5 +96,5 @@ def get_notification_history(customer_id: int, db: Session = Depends(get_db)):
             "message": n.message,
             "notification_type": n.notification_type,
             "is_read": n.is_read
-            })
-        return {"notifications": notification_list}
+        })
+    return {"notifications": notification_list}
