@@ -14,6 +14,13 @@ def get_order_or_404(combined_order_id: str, db: Session) -> Order:
         raise HTTPException(status_code=404, detail="Order not found")
     return order
 
+#helper func - returns all rows/items for one grouped order
+def get_order_items_or_404(combined_order_id: str, db: Session):
+    items = db.query(Order).filter(Order.combined_order_id == combined_order_id).all()
+    if not items:
+        raise HTTPException(status_code=404, detail="Order not found")
+    return items
+
 # shared validation
 def validate_menu_item(restaurant_id: int, food_item: str, db: Session):
     exists = db.query(MenuItem).filter(
@@ -142,11 +149,53 @@ def validate_order(order_id: str, db: Session):
 def submit_order(order_id: str, db: Session = Depends(get_db)):
     items = validate_order(order_id, db)
 
-    if items[0].status == "submitted":
+    if items[0].status == "Submitted":
         raise HTTPException(status_code=400, detail="Order already submitted")
 
     for item in items:
-        item.status = "submitted"
+        item.status = "Submitted"
 
     db.commit()
     return {"message": f"Order {order_id} submitted successfully"}
+
+@router_order.patch("/{order_id}/in-progress")
+def mark_order_in_progress(order_id: str, db: Session = Depends(get_db)):
+    items = get_order_items_or_404(order_id, db)
+
+    if items[0].status != "Submitted":
+        raise HTTPException(
+            status_code=400,
+            detail="Order must be submitted before it can be in progress"
+        )
+
+    for item in items:
+        item.status = "In Progress"
+
+    db.commit()
+    return {"message": f"Order {order_id} marked as in progress"}
+
+@router_order.patch("/{order_id}/complete")
+def complete_order(order_id: str, db: Session = Depends(get_db)):
+    items = get_order_items_or_404(order_id, db)
+
+    if items[0].status != "In Progress":
+        raise HTTPException(
+            status_code=400,
+            detail="Order must be in progress before it can be completed"
+        )
+
+    for item in items:
+        item.status = "Completed"
+
+    db.commit()
+    return {"message": f"Order {order_id} completed"}
+
+@router_order.patch("/{order_id}/cancel")
+def cancel_order(order_id: str, db: Session = Depends(get_db)):
+    items = get_order_items_or_404(order_id, db)
+
+    for item in items:
+        item.status = "Canceled"
+
+    db.commit()
+    return {"message": f"Order {order_id} canceled"}

@@ -68,7 +68,7 @@ class Order(Base):
     order_value = Column(Float, nullable=True)
     food_item = Column(String, nullable=True)
     
-    status = Column(String, nullable=False, default="draft")
+    status = Column(String, nullable=False, default="Created")
 
 class Payment(Base):
     """Model representing a payment attempt for an order."""
