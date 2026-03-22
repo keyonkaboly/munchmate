@@ -47,13 +47,17 @@ class Order(Base):
     __tablename__ = "orders"
     id = Column(Integer, primary_key=True, autoincrement=True)
     
-    order_id = Column(String, index = True)
+    order_id = Column(String, index = True, nullable=True)
+    
+    combined_order_id = Column(String, index=True, nullable=True)
+    
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable = True)
     restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable = False)
     subtotal = Column(Float, nullable = False, default = 0.0)
     tax = Column(Float, nullable = False, default = 0.0)
     delivery_cost = Column(Float, nullable = False, default = 5.0)
     total_cost = Column(Float, nullable = False, default = 0.0)
+    
     delivery_method = Column(String, nullable=True)
     delivery_distance = Column(Float, nullable=True)
     delivery_time = Column(String, nullable=True)
