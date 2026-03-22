@@ -1,17 +1,16 @@
 Date: March 14, 2026 (End of day we had a meeting)
 Sprint: # 4
 
-
 1. What did we push since the last meeting?
-Feature 2 is basically done. It’ll be finished by end of day tomorrow. Feature 3 was 99% done, just one last PR that is being worked on for global search bar.
-Feature 2 added and finished all payment simulation endpoints.
-Feature 6 fully finished and tests were written.
-Finished part of Feature 5 which includes assigning delivery information to orders 
-Finished f1 sr2 & sr3
-Finished f4 sr1 & sr2
+- Feature 2 is basically done. It’ll be finished by end of day tomorrow. Feature 3 was 99% done, just one last PR that is being worked on for global search bar.
+- Feature 2 added and finished all payment simulation endpoints.
+- Feature 6 fully finished and tests were written.
+- Finished part of Feature 5 which includes assigning delivery information to orders 
+- Finished f1 sr2 & sr3
+- Finished f4 sr1 & sr2
 
 2. What are we working on for this sprint?
-Finishing Feature 2 and 3 (one PR left for both).
-Finishing Feature 8, and also one Feature 5 issue regarding notification and notification system, totalling all 5 branches
-Add timestamps for orders and simulated user input for payment testing 
-Reviewing prs and working on fixing the ids 
+- Finishing Feature 2 and 3 (one PR left for both).
+- Finishing Feature 8, and also one Feature 5 issue regarding notification and notification system, totalling all 5 branches
+- Add timestamps for orders and simulated user input for payment testing 
+- Reviewing prs and working on fixing the ids 
