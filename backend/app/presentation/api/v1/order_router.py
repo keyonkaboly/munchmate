@@ -214,3 +214,45 @@ def cancel_order(order_id: str, db: Session = Depends(get_db)):
 
     db.commit()
     return {"message": f"Order {order_id} canceled"}
+
+@router_order.get("/customer/{customer_id}")
+def get_customer_orders(customer_id: str, db: Session = Depends(get_db)):
+    orders = db.query(Order).filter(Order.customer_id == customer_id).all()
+
+    if not orders:
+        return {
+            "customer_id": customer_id,
+            "current_orders": [],
+            "past_orders": []
+        }
+
+    grouped_orders = {}
+
+    for order in orders:
+        order_id = order.combined_order_id
+
+        if order_id not in grouped_orders:
+            grouped_orders[order_id] = {
+                "combined_order_id": order.combined_order_id,
+                "restaurant_id": order.restaurant_id,
+                "customer_id": order.customer_id,
+                "status": order.status,
+                "food_items": []
+            }
+
+        grouped_orders[order_id]["food_items"].append(order.food_item)
+
+    current_orders = []
+    past_orders = []
+
+    for grouped_order in grouped_orders.values():
+        if grouped_order["status"] in ["Submitted", "In Progress"]:
+            current_orders.append(grouped_order)
+        elif grouped_order["status"] in ["Completed", "Canceled"]:
+            past_orders.append(grouped_order)
+
+    return {
+        "customer_id": customer_id,
+        "current_orders": current_orders,
+        "past_orders": past_orders
+    }
