@@ -75,7 +75,6 @@ def test_create_invalid_item():
 def test_complete_order_populates_delivery_info():
     db = SessionLocal()
 
-    # create the order via API
     res = client.post("/orders/create", json={
         "customer_id": 1,
         "restaurant_id": 1,
@@ -84,7 +83,6 @@ def test_complete_order_populates_delivery_info():
     assert res.status_code == 200
     order_id = res.json()["combined_order_id"]
 
-    # seed some Order rows with delivery data so get_most_restrictive_delivery has something to query
     from app.infrastructure.database.models import Order
     db.add(Order(
         order_id="seed-1",
@@ -115,7 +113,6 @@ def test_complete_order_populates_delivery_info():
     db.commit()
     db.close()
 
-    # move order through the status flow
     client.post(f"/orders/{order_id}/submit")
     client.patch(f"/orders/{order_id}/in-progress")
     res = client.patch(f"/orders/{order_id}/complete")
@@ -123,7 +120,6 @@ def test_complete_order_populates_delivery_info():
     assert res.status_code == 200
     delivery_info = res.json()["delivery_info"]
 
-    # Car is most restrictive, 20.0 is max delay, 8.0 is max distance etc
     assert delivery_info["delivery_method"] == "Car"
     assert delivery_info["delivery_delay"] == 20.0
     assert delivery_info["delivery_distance"] == 8.0
