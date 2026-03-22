@@ -19,10 +19,10 @@ def register(
     role: str,
     db: Session = Depends(get_db)
 ):
-    if role not in ["customer", "restaurant_owner"]:
+    if role not in ["customer", "restaurant_manager"]:
         raise HTTPException(
             status_code=400,
-            detail="Invalid role. Must be 'customer' or 'restaurant_owner'."
+            detail="Invalid role. Must be 'customer' or 'restaurant_manager'."
         )
 
     hashed_password = hash_password(user.password)
@@ -31,7 +31,7 @@ def register(
         username=user.username,
         email=user.email,
         password_hash=hashed_password,
-        user_type="restaurant_manager" if role == "restaurant_owner" else "customer"
+        user_type = role
     )
 
     db.add(new_user)
