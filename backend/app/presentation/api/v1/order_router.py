@@ -136,7 +136,6 @@ def update_item_quantity(order_id: str, food_item: str, quantity: int, db: Sessi
                 combined_order_id=order_id,
                 restaurant_id=items[0].restaurant_id,
                 customer_id=items[0].customer_id,
-                order_value=items[0].order_value,
                 food_item=food_item
             ))
     elif quantity < current_qty:

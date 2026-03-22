@@ -30,8 +30,6 @@ def calculate_combined_order_total(db: Session, combined_order_id: str) -> dict 
 
         if menu_item and menu_item.price is not None:
             subtotal += float(menu_item.price)
-        elif item.order_value is not None:
-            subtotal += float(item.order_value)
 
     return calculate_order_total(round(subtotal, 2))
 
