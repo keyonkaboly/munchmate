@@ -149,26 +149,3 @@ def get_restaurant_notifications(restaurant_id: int, db: Session = Depends(get_d
             for n in notifications
         ]
     }
-
-@router.post("/order-delivered")
-def notify_order_delivered(order_id: str, customer_id: int, db: Session = Depends(get_db)):
-    """Send a notification when an order has been delivered."""
-    order = db.query(Order).filter(Order.order_id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-
-    notification = Notification(
-        customer_id=customer_id,
-        order_id=order_id,
-        message=f"Your order {order_id} has been delivered. Enjoy your meal!",
-        notification_type="order_delivered"
-    )
-    db.add(notification)
-    db.commit()
-
-    return {
-        "message": f"Order {order_id} has been delivered",
-        "notification_type": "order_delivered",
-        "customer_id": customer_id,
-        "order_id": order_id
-    }
