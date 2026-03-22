@@ -14,14 +14,11 @@ class UserLogin(BaseModel):
     
 class UserResponse(UserBase):
     id: int
-    
     model_config = ConfigDict(from_attributes=True)
-    
 
 class RestaurantManagerCreate(UserCreate):
     restaurant_manager_restaurant_id: int
-
-
+    
 class RestaurantManagerResponse(UserResponse):
     restaurant_manager_restaurant_id: int
     user_type: str
@@ -34,3 +31,11 @@ class Token(BaseModel):
     
 class UserInDB(UserBase):
     hashed_password: str
+    
+from typing import Optional
+from pydantic import BaseModel, EmailStr, Field
+
+class UserUpdate(BaseModel):
+    username: Optional[str] = Field(default=None, min_length=6, max_length=12)
+    email: Optional[EmailStr] = None
+    password: Optional[str] = Field(default=None, min_length=6)
