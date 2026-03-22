@@ -53,6 +53,7 @@ def notify_order_cancelled(order_id: str, customer_id: int, db: Session = Depend
         "customer_id": customer_id
     }
 
+
 @router.post("/delivery-status")
 def notify_delivery_status(order_id: str, customer_id: int, status: str, db: Session = Depends(get_db)):
     """Send a notification when delivery status changes."""
@@ -75,3 +76,25 @@ def notify_delivery_status(order_id: str, customer_id: int, status: str, db: Ses
         "customer_id": customer_id,
         "status": status
     }
+
+
+@router.get("/history/{customer_id}")
+def get_notification_history(customer_id: int, db: Session = Depends(get_db)):
+    """Retrieve all notifications for a specific customer."""
+    notifications = db.query(Notification).filter(
+        Notification.customer_id == customer_id
+    ).all()
+
+    if not notifications:
+        return {"notifications": [], "message": "No notifications found for this customer"}
+
+    notification_list = []
+    for n in notifications:
+        notification_list.append({
+            "id": n.id,
+            "order_id": n.order_id,
+            "message": n.message,
+            "notification_type": n.notification_type,
+            "is_read": n.is_read
+        })
+    return {"notifications": notification_list}
