@@ -14,7 +14,6 @@ class Customer(Base):
     user_type = Column(String, nullable=False, default="customer")
     restaurant_manager_restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable=True)
 
-
 # Restaurant table definition
 class Restaurant(Base):
     __tablename__ = "restaurants"
@@ -48,12 +47,16 @@ class Order(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     
     order_id = Column(String, index = True)
+    
+    combined_order_id = Column(String, index=True, nullable=True)
+    
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable = True)
     restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable = False)
     subtotal = Column(Float, nullable = False, default = 0.0)
     tax = Column(Float, nullable = False, default = 0.0)
     delivery_cost = Column(Float, nullable = False, default = 5.0)
     total_cost = Column(Float, nullable = False, default = 0.0)
+    
     delivery_method = Column(String, nullable=True)
     delivery_distance = Column(Float, nullable=True)
     delivery_time = Column(String, nullable=True)
