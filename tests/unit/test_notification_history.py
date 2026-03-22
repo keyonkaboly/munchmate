@@ -40,11 +40,12 @@ def test_notification_history_success():
     """Check that notification history is returned for a valid customer."""
     db = TestingSessionLocal()
     db.add(Order(order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
+    db.commit()
     db.add(Notification(customer_id=1, order_id="TEST001", message="Order confirmed", notification_type="order_created"))
+    db.commit()
     db.add(Notification(customer_id=1, order_id="TEST001", message="Order on the way", notification_type="delivery_status"))
     db.commit()
     db.close()
-
     response = client.get("/notifications/history/1")
     assert response.status_code == 200
     assert len(response.json()["notifications"]) == 2
