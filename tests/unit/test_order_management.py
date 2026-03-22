@@ -87,4 +87,4 @@ def test_submit(order_id):
     items = db.query(Order).filter(Order.combined_order_id == order_id).all()
     db.close()
 
-    assert all(i.status == "submitted" for i in items)
+    assert all(i.status == "Submitted" for i in items)
