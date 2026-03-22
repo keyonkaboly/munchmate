@@ -8,7 +8,6 @@ from app.presentation.api.v1 import checkout
 from app.presentation.api.v1 import orders
 from app.presentation.api.v1 import payments
 from app.presentation.api.v1 import orders
-from app.presentation.api.v1 import payments
 from app.presentation.api.v1 import search
 from app.presentation.api.v1.order_router import router_order
 
