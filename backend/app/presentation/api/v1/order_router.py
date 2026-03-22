@@ -21,6 +21,16 @@ def get_order_items_or_404(combined_order_id: str, db: Session):
         raise HTTPException(status_code=404, detail="Order not found")
     return items
 
+#prevents any modification once order is completed
+def ensure_order_not_completed(combined_order_id: str, db: Session):
+    items = get_order_items_or_404(combined_order_id, db)
+    if items[0].status == "Completed":
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot modify a completed order"
+        )
+    return items
+
 # shared validation
 def validate_menu_item(restaurant_id: int, food_item: str, db: Session):
     exists = db.query(MenuItem).filter(
@@ -65,7 +75,8 @@ def create_order(order: StartOrderRequest, db: Session = Depends(get_db)):
 
 @router_order.post("/{order_id}/add-item")
 def add_item(order_id: str, food_item: str, db: Session = Depends(get_db)):
-    order = get_order_or_404(order_id, db)
+    items = ensure_order_not_completed(order_id, db)
+    order = items[0]
     
     validate_menu_item(order.restaurant_id, food_item, db)
     
@@ -83,7 +94,7 @@ def add_item(order_id: str, food_item: str, db: Session = Depends(get_db)):
 
 @router_order.delete("/{order_id}/remove-item")
 def remove_item(order_id: str, food_item: str, db: Session = Depends(get_db)):
-    get_order_or_404(order_id, db)
+    ensure_order_not_completed(order_id, db)
     
     item = db.query(Order).filter(
         Order.combined_order_id == order_id,
@@ -99,6 +110,8 @@ def remove_item(order_id: str, food_item: str, db: Session = Depends(get_db)):
 
 @router_order.patch("/{order_id}/update-item")
 def update_item_quantity(order_id: str, food_item: str, quantity: int, db: Session = Depends(get_db)):
+    ensure_order_not_completed(order_id, db)
+    
     #this validates that the quanity is positive
     if quantity < 0:
         raise HTTPException(status_code=422, detail="Quantity cannot be negative")
@@ -147,6 +160,7 @@ def validate_order(order_id: str, db: Session):
 
 @router_order.post("/{order_id}/submit")
 def submit_order(order_id: str, db: Session = Depends(get_db)):
+    ensure_order_not_completed(order_id, db)
     items = validate_order(order_id, db)
 
     if items[0].status == "Submitted":
@@ -192,6 +206,7 @@ def complete_order(order_id: str, db: Session = Depends(get_db)):
 
 @router_order.patch("/{order_id}/cancel")
 def cancel_order(order_id: str, db: Session = Depends(get_db)):
+    ensure_order_not_completed(order_id, db)
     items = get_order_items_or_404(order_id, db)
 
     for item in items:
