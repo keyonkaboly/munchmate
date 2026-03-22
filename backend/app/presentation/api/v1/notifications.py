@@ -137,15 +137,13 @@ def get_restaurant_notifications(restaurant_id: int, db: Session = Depends(get_d
     if not notifications:
         return {"notifications": [], "message": "No incoming orders found for this restaurant"}
 
-    return {
-        "notifications": [
-            {
-                "id": n.id,
-                "order_id": n.order_id,
-                "message": n.message,
-                "notification_type": n.notification_type,
-                "is_read": n.is_read
-            }
-            for n in notifications
-        ]
-    }
+    notification_list = []
+    for n in notifications:
+        notification_list.append({
+            "id": n.id,
+            "order_id": n.order_id,
+            "message": n.message,
+            "notification_type": n.notification_type,
+            "is_read": n.is_read
+        })
+    return {"notifications": notification_list}
