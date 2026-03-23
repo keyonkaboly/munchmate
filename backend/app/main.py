@@ -20,20 +20,16 @@ app.include_router(search.router)
 # Include restaurant router after authorization, making sure auth is checked before getting access to the restaurant endpoints
 app.include_router(restaurants.router)
 
+#create an order:
+app.include_router(router_order)
+
 app.include_router(checkout.router)
 
 # registers routes defined in payments.py with main FastAPI
 app.include_router(payments.router)
-# registers routes defined in orders.py with main FastAPI
-
 
 # registers routes defined in notifications.py with main FastAPI
 app.include_router(notifications.router)
-
-#create an order:
-app.include_router(router_order)
-
-
 
 # Creates endpoint
 @app.get("/")
