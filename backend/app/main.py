@@ -31,7 +31,7 @@ app.include_router(orders.router)
 # registers routes defined in payments.py with main FastAPI
 app.include_router(payments.router)
 
-# registers routes defined in orders.py with main FastAPI
+# registers routes defined in order_router.py with main FastAPI
 app.include_router(search.router)
 
 # registers routes defined in notifications.py with main FastAPI
