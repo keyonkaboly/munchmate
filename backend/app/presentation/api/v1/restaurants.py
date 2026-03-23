@@ -23,10 +23,9 @@ def get_filtered_restaurants(
     "Returns restaurants filtered by dietary options and includes page numbers."
     query = apply_dietary_filters(db, is_halal=is_halal, is_vegetarian=is_vegetarian, cuisine_type=cuisine_type, return_query=True)
 
-    if query.count() == 0:
-        return {"message": "No restaurants found"}
-
-    return paginate(query, page=page, page_size=page_size)
+    result = paginate(query, page=page, page_size=page_size)
+    result["items"] = [RestaurantResponse.model_validate(item).model_dump() for item in result["items"]]
+    return result
 
 @router.get("/{restaurant_id}", response_model=RestaurantResponse)
 def get_restaurant(restaurant_id: int, db: Session = Depends(get_db)):

@@ -16,16 +16,20 @@ def seed_restaurants(result, db_session):
     "Beef pie": "Other", "Chicken pie": "Other"
 }
     
-    uniqueRestaurants = result[['restaurant_id', 'food_item', 'location']].drop_duplicates(subset=['restaurant_id'])
+    unique_restaurants = result[['restaurant_id', 'food_item', 'location']].drop_duplicates(subset=['restaurant_id'])
     restaurant_count = 0
 
-    for index, row in unique_Restaurants.iterrows():
+    from app.utils.filters import apply_dietary_filters
+    vegetarian_items = {"Salad", "Soup", "Whole cake", "Cookie", "Cup cake", "PastrySmoothie"}
+    halal_items = {"Briyani rice", "Chicken rice", "Shawarma", "Dumplings", "Sushi"}
+
+    for index, row in unique_restaurants.iterrows():
         restaurant_id = int(row['restaurant_id'])
         cuisine = CUISINE_MAP.get(row['food_item'], "Other")
         location = str(row['location'])
         food_item = str(row['food_item'])
-        is_halal = False
-        is_vegetarian = False
+        is_vegetarian = food_item in vegetarian_items
+        is_halal = food_item in halal_items or is_vegetarian
 
         exist = db_session.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
 
@@ -45,10 +49,10 @@ def seed_restaurants(result, db_session):
 
 def seed_menu_items(result, db_session):
     """Seed unique menu items per restaurant from the dataset."""
-    uniqueMenuItems = result[['restaurant_id', 'food_item', 'order_value']].drop_duplicates(subset=['restaurant_id', 'food_item'])
+    unique_menu_items = result[['restaurant_id', 'food_item', 'order_value']].drop_duplicates(subset=['restaurant_id', 'food_item'])
     menu_item_count = 0
 
-    for index, row in unique_MenuItems.iterrows():
+    for index, row in unique_menu_items.iterrows():
         restaurant_id = int(row['restaurant_id'])
         food_item = str(row['food_item'])
         price = float(row['order_value'])
@@ -73,13 +77,15 @@ def seed_order_data(result, db_session):
 
     for index, row in uniqueOrders.iterrows():
         order_id = str(row['order_id'])
-        customer_id = int(row['customer_id'])
+        try:
+            customer_id = int(row['customer_id'])
+        except (ValueError, TypeError):
+            continue
         restaurant_id = int(row['restaurant_id'])
         subtotal = float(row['order_value'])
         tax = round((subtotal) * (0.12), 2)
         delivery_cost = 5.00
         total_cost = round(subtotal + tax + delivery_cost, 2)
-    
 
         exist = db_session.query(Order).filter(Order.order_id == order_id).first()
 
@@ -87,7 +93,6 @@ def seed_order_data(result, db_session):
             order = Order(order_id=order_id, customer_id=customer_id, restaurant_id=restaurant_id, subtotal=subtotal, tax=tax,delivery_cost=delivery_cost, total_cost=total_cost)
             db_session.add(order)
             order_count += 1
-        
     db_session.commit()
     return order_count
 
@@ -101,15 +106,13 @@ def seed_dataset_data():
         restaurant_count = seed_restaurants(result, db_session)
         menu_item_count = seed_menu_items(result, db_session)
         order_count = seed_order_data(result, db_session)
-
-        print("Seeding complete. ", restaurant_count, "restaurants seeded. ", menu_item_count, " menu items seeded ", order_count, " orders seeded.")
-
         return restaurant_count, menu_item_count, order_count
-
     except Exception as e:
         db_session.rollback()
-        print("Error when attempting to seed database:", e)
         raise
 
     finally:
         db_session.close()
+        
+if __name__ == "__main__":
+    seed_dataset_data()
