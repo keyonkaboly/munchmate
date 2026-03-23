@@ -39,7 +39,7 @@ client = TestClient(app)
 def test_delivery_status_notification_success():
     """Check that a notification is sent when delivery status changes."""
     db = TestingSessionLocal()
-    db.add(Order(order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
+    db.add(Order(combined_order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
     db.commit()
     db.close()
 
@@ -57,7 +57,7 @@ def test_delivery_status_notification_order_not_found():
 def test_delivery_status_notification_correct_customer():
     """Check that the delivery status notification is sent to the correct customer."""
     db = TestingSessionLocal()
-    db.add(Order(order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
+    db.add(Order(combined_order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
     db.commit()
     db.close()
 
@@ -69,7 +69,7 @@ def test_delivery_status_notification_correct_customer():
 def test_delivery_status_notification_status_updated():
     """Check that the correct status is returned in the notification."""
     db = TestingSessionLocal()
-    db.add(Order(order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
+    db.add(Order(combined_order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
     db.commit()
     db.close()
 

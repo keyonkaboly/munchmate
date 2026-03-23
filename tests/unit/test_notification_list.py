@@ -39,7 +39,7 @@ client = TestClient(app)
 def test_incoming_order_notification_success():
     """Check that a notification is sent to restaurant owner when order is placed."""
     db = TestingSessionLocal()
-    db.add(Order(order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
+    db.add(Order(combined_order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
     db.commit()
     db.close()
 
@@ -57,7 +57,7 @@ def test_incoming_order_notification_order_not_found():
 def test_incoming_order_notification_correct_restaurant():
     """Check that the notification contains the correct restaurant ID."""
     db = TestingSessionLocal()
-    db.add(Order(order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
+    db.add(Order(combined_order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
     db.commit()
     db.close()
 
@@ -69,7 +69,7 @@ def test_incoming_order_notification_correct_restaurant():
 def test_get_restaurant_notifications_success():
     """Check that restaurant notification list returns correct notifications."""
     db = TestingSessionLocal()
-    db.add(Order(order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
+    db.add(Order(combined_order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
     db.add(Notification(customer_id=1, order_id="TEST001", message="New order received", notification_type="incoming_order"))
     db.commit()
     db.close()

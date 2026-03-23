@@ -39,7 +39,7 @@ client = TestClient(app)
 def test_order_cancelled_notification_success():
     """Check that a notification is sent when an order is cancelled."""
     db = TestingSessionLocal()
-    db.add(Order(order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
+    db.add(Order(combined_order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
     db.commit()
     db.close()
 
@@ -57,7 +57,7 @@ def test_order_cancelled_notification_order_not_found():
 def test_order_cancelled_notification_correct_customer():
     """Check that the cancellation notification is sent to the correct customer."""
     db = TestingSessionLocal()
-    db.add(Order(order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
+    db.add(Order(combined_order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
     db.commit()
     db.close()
 

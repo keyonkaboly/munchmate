@@ -38,6 +38,10 @@ client = TestClient(app)
 
 def test_successful_payment():
     """Check that a valid payment returns success."""
+    db = TestingSessionLocal()
+    db.add(Order(combined_order_id="Str1ng", customer_id=1, restaurant_id=1, subtotal=50.0))
+    db.commit()
+    db.close()
     response = client.post("/payments/", json={
         "order_id": "Str1ng",
         "total_price": 50.0,
@@ -49,6 +53,10 @@ def test_successful_payment():
 
 def test_declined_card():
     """Check that a card ending in 0000 is declined."""
+    db = TestingSessionLocal()
+    db.add(Order(combined_order_id="Str1ng", customer_id=1, restaurant_id=1, subtotal=50.0))
+    db.commit()
+    db.close()
     response = client.post("/payments/", json={
         "order_id": "Str1ng",
         "total_price": 50.0,
@@ -60,6 +68,10 @@ def test_declined_card():
 
 def test_invalid_amount():
     """Check that a non-positive amount returns failed payment."""
+    db = TestingSessionLocal()
+    db.add(Order(combined_order_id="Str1ng", customer_id=1, restaurant_id=1, subtotal=50.0))
+    db.commit()
+    db.close()
     response = client.post("/payments/", json={
         "order_id": "Str1ng",
         "total_price": 0.0,
