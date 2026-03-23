@@ -29,8 +29,6 @@ class Token(BaseModel):
     access_token: str
     token_type: str
     
-class UserInDB(UserBase):
-    hashed_password: str
     
 from typing import Optional
 from pydantic import BaseModel, EmailStr, Field
