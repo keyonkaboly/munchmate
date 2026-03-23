@@ -27,14 +27,21 @@ def get_filtered_restaurants(
     result["items"] = [RestaurantResponse.model_validate(item).model_dump() for item in result["items"]]
     return result
 
-@router.get("/{restaurant_id}", response_model=RestaurantResponse)
+@router.get("/{restaurant_id}")
 def get_restaurant(restaurant_id: int, db: Session = Depends(get_db)):
     restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
-    
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant ID not found")
+
+    menu_items = db.query(MenuItem).filter(MenuItem.restaurant_id == restaurant_id).all()
+
+    menu_items_list = []
+    for item in menu_items:
+        menu_items_list.append( {"food_item": item.food_item, "price": item.price, "is_halal": item.is_halal,"is_vegetarian": item.is_vegetarian})
     
-    return restaurant
+    response = restaurant.__dict__.copy()
+    response["menu_items"] = menu_items_list
+    return response
 
 """Search for menu items within a specific restaurant using string text query.
 The return is any matches that partially match the string query text.
