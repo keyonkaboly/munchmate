@@ -27,7 +27,7 @@ def setup_database():
 
 client = TestClient(app)
 
-# delivery info is saved and can be retrieved
+"""delivery info is saved and can be retrieved"""
 def test_delivery_info_saved_and_retrievable():
     post_response = client.post("/orders/", json={
         "order_id": "Str1ng",
@@ -50,7 +50,7 @@ def test_delivery_info_saved_and_retrievable():
     assert data["delivery_distance"] == 2.5
     assert data["route_taken"] == "Route_1"
 
-# delivery info is saved automatically when order is placed
+"""delivery info is saved automatically when order is placed"""
 def test_delivery_info_saved_automatically_on_order_placement():
     response = client.post("/orders/", json={
         "order_id": "Str1ng",
@@ -66,7 +66,7 @@ def test_delivery_info_saved_automatically_on_order_placement():
     assert data["order_id"] is not None
     assert data["delivery_method"] == "Car"
 
-# delivery data remains accessible for lifetime of order
+"""delivery data remains accessible for lifetime of order"""
 def test_delivery_info_remains_accessible():
     post_response = client.post("/orders/", json={
         "order_id": "Str1ng",
@@ -83,7 +83,7 @@ def test_delivery_info_remains_accessible():
         assert get_response.status_code == 200
         assert get_response.json()["order_id"] == order_id
 
-# Verifies non-existent order returns 404
+""" Verifies non-existent order returns 404"""
 def test_get_nonexistent_order_returns_404():
     response = client.get("/orders/999")
     assert response.status_code == 404

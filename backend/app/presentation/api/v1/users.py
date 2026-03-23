@@ -8,12 +8,11 @@ from app.infrastructure.security.hashing import hash_password
 
 router_user = APIRouter(prefix="/users", tags=["users"])
 
-#creating new user so new new data so using post & only returning userresponse, not the password
-@router_user.post("/", response_model=UserResponse) #userresponse is from schemas and renturns the set defined already
+"""creating new user so new new data so using post & only returning userresponse, not the password"""
+@router_user.post("/", response_model=UserResponse) 
 def create_user(
     user: UserCreate,
-    db: Session = Depends(get_db) #get_db creates a new database session & gives it to the route
-    #sessiion creates a temproay databse connection for that request
+    db: Session = Depends(get_db) 
 ):
     
     new_user = Customer(
@@ -22,13 +21,13 @@ def create_user(
         password_hash=hash_password(user.password), #this temporary for now 
     )
     
-    db.add(new_user) #adds the new user to the database session
+    db.add(new_user) 
     
     try:
-        db.commit() #commits the changes to the database
-        db.refresh(new_user) #refreshes the new user instance with the data from the database
-    except IntegrityError: #raised when a database rule is violated
-        db.rollback() #rolls back the changes to the database if there is an integrity error (e.g. duplicate email or username)
+        db.commit()
+        db.refresh(new_user) 
+    except IntegrityError: 
+        db.rollback() 
         raise HTTPException(status_code=400, detail="Email or username already exists") #400=bad request
     
     

@@ -6,12 +6,12 @@ from app.main import app
 from app.infrastructure.database.database import get_db
 from app.infrastructure.database.models import Base, Restaurant, MenuItem
 
-# provides an isolated test database so real data is never affected
+
 TEST_DATABASE_URL = "sqlite:///./test.db"
 engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
 TestingSessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
-# redirecting database calls to the test database during tests
+"""redirecting database calls to the test database during tests"""
 def override_get_db():
     db = TestingSessionLocal()
     try:
@@ -21,7 +21,7 @@ def override_get_db():
 
 app.dependency_overrides[get_db] = override_get_db
 
-# prepares and cleans up test data before and after each test
+"""prepares and cleans up test data before and after each test"""
 @pytest.fixture(autouse=True)
 def setup_database():
     Base.metadata.create_all(bind=engine)
@@ -37,10 +37,10 @@ def setup_database():
     yield
     Base.metadata.drop_all(bind=engine)
 
-# simulates real HTTP requests to the API during tests
+
 client = TestClient(app)
 
-# Verifies that updating a restaurant returns the correct updated data
+"""Verifies that updating a restaurant returns the correct updated data"""
 def test_put_updates_restaurant_info():
     response = client.put("/restaurants/1", json={
         "id": 1,
@@ -52,7 +52,7 @@ def test_put_updates_restaurant_info():
     assert json_data["location"] == "City_4"
     assert json_data["food_item"] == "Pasta"
 
-# Verifies that fetching a restaurant returns the correct JSON format
+"""Verifies that fetching a restaurant returns the correct JSON format"""
 def test_get_restaurant_returns_correct_format():
     response = client.get("/restaurants/1")
     assert response.status_code == 200
@@ -60,7 +60,7 @@ def test_get_restaurant_returns_correct_format():
     assert "id" in json_data
     assert json_data["id"] == 1
 
-# Verifies that the API handles non-existent restaurants with a proper error
+"""Verifies that the API handles non-existent restaurants with a proper error"""
 def test_put_invalid_restaurant_returns_404():
     response = client.put("/restaurants/999", json={
         "id": 999,
@@ -69,7 +69,7 @@ def test_put_invalid_restaurant_returns_404():
     })
     assert response.status_code == 404
 
-# verifyies that the API rejects incomplete or invalid input data
+"""verifyies that the API rejects incomplete or invalid input data"""
 def test_put_missing_name_returns_422():
     response = client.put("/restaurants/1", json={
         "location": "No id provided",
@@ -77,7 +77,7 @@ def test_put_missing_name_returns_422():
     })
     assert response.status_code == 422
 
-# verifies that updates are actually retrievable from the database
+"""verifies that updates are actually retrievable from the database"""
 def test_put_changes_are_saved_and_retrievable():
     client.put("/restaurants/1", json={
         "id": 1,

@@ -8,7 +8,6 @@ from app.utils.filters import apply_dietary_filters
 from app.utils.pagination import paginate
 from app.application.services.authentication_service import get_current_user
 
-# Create router for restaurant endpoints
 router = APIRouter(prefix="/restaurants", tags=["restaurants"])
 
 @router.get("/")
@@ -72,25 +71,21 @@ def get_order(order_id: str, db: Session = Depends(get_db)):
 def get_menu_item(restaurant_id: int, food_item: str, db: Session = Depends(get_db)):
     """Validate that a food item exists and belongs to the given restaurant."""
 
-    # First verify the restaurant exists
     rest = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
     if rest is None:
         raise HTTPException(status_code=404, detail="Restaurant ID not found")
 
-    # Then check if the menu item is available at this restaurant
     item = db.query(MenuItem).filter(
         MenuItem.restaurant_id == restaurant_id,
         MenuItem.food_item == food_item  # Match by exact name
     ).first()
 
     if not item:
-        # Food item doesn't exist at this location
         raise HTTPException(
             status_code=404,
             detail="This food item does not exist at this restaurant"
         )
 
-    # Build response with both pieces of info
     response = {
         "food_item": item.food_item,
         "restaurant_id": rest.id
@@ -98,15 +93,14 @@ def get_menu_item(restaurant_id: int, food_item: str, db: Session = Depends(get_
 
     return response
 
-# updates to restaurant details, only for restaurant owners 
+"""updates to restaurant details, only for restaurant owner"""
 @router.put("/{restaurant_id}", response_model=RestaurantResponse)
-def update_restaurant(restaurant_id: int, data: RestaurantUpdate, db: Session = Depends(get_db)): # takes rest. ID from URL and new data from the request body 
+def update_restaurant(restaurant_id: int, data: RestaurantUpdate, db: Session = Depends(get_db)): 
     """Allow a restaurant owner to update their restaurant's details."""
-    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first() # looks up restauraunt to see if exists
+    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first() 
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant ID not found")
 
-   # overwrites old values with new ones from the request `
     restaurant.id = data.id
     restaurant.location = data.location
     restaurant.food_item = data.food_item
@@ -142,7 +136,7 @@ def rename_menu_item(restaurant_id: int, food_item: str, data: MenuItemNameUpdat
     return {"restaurant_id": restaurant_id, "food_item": menu_item.food_item}
 
 
-#helper func
+
 def require_restaurant_manager(current_user: Customer = Depends(get_current_user)):
     if current_user.user_type != "restaurant_manager":
         raise HTTPException(
@@ -151,7 +145,7 @@ def require_restaurant_manager(current_user: Customer = Depends(get_current_user
         )
     return current_user
 
-#this func so only restaurant manager can access
+"""this func so only restaurant manager can access"""
 @router.get("/{restaurant_id}/orders")
 def get_restaurant_orders(
     restaurant_id: int,

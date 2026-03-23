@@ -23,8 +23,6 @@ class RestaurantManagerResponse(UserResponse):
     restaurant_manager_restaurant_id: int
     user_type: str
 
-#this access token used to authenticate the user
-#this tells the server who is making the request
 class Token(BaseModel):
     access_token: str
     token_type: str
