@@ -97,22 +97,6 @@ def get_menu_item(restaurant_id: int, food_item: str, db: Session = Depends(get_
 
     return response
 
-# updates to restaurant details, only for restaurant owners 
-@router.put("/{restaurant_id}", response_model=RestaurantResponse)
-def update_restaurant(restaurant_id: int, data: RestaurantUpdate, db: Session = Depends(get_db)): # takes rest. ID from URL and new data from the request body 
-    """Allow a restaurant owner to update their restaurant's details."""
-    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first() # looks up restauraunt to see if exists
-    if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant ID not found")
-
-   # overwrites old values with new ones from the request `
-    restaurant.id = data.id
-    restaurant.location = data.location
-    restaurant.food_item = data.food_item
-
-    db.commit()
-    db.refresh(restaurant)
-    return restaurant
 
 @router.put("/{restaurant_id}/menu-items/{food_item}")
 def rename_menu_item(restaurant_id: int, food_item: str, data: MenuItemNameUpdate, manager_user_id: int = Query(...), db: Session = Depends(get_db)):
