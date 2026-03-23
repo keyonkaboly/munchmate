@@ -7,21 +7,21 @@ import uuid
 
 router_order = APIRouter(prefix="/orders", tags=["orders"])
 
-# helper func
+"""helper func"""
 def get_order_or_404(combined_order_id: str, db: Session) -> Order:
     order = db.query(Order).filter(Order.combined_order_id == combined_order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     return order
 
-#helper func - returns all rows/items for one grouped order
+"""helper func - returns all rows/items for one grouped order"""
 def get_order_items_or_404(combined_order_id: str, db: Session):
     items = db.query(Order).filter(Order.combined_order_id == combined_order_id).all()
     if not items:
         raise HTTPException(status_code=404, detail="Order not found")
     return items
 
-#prevents any modification once order is completed
+"""prevents any modification once order is completed"""
 def ensure_order_not_completed(combined_order_id: str, db: Session):
     items = get_order_items_or_404(combined_order_id, db)
     if items[0].status == "Completed":
@@ -31,7 +31,7 @@ def ensure_order_not_completed(combined_order_id: str, db: Session):
         )
     return items
 
-# shared validation
+"""shared validation"""
 def validate_menu_item(restaurant_id: int, food_item: str, db: Session):
     exists = db.query(MenuItem).filter(
         MenuItem.restaurant_id == restaurant_id,
@@ -50,7 +50,6 @@ def create_order(order: StartOrderRequest, db: Session = Depends(get_db)):
    if not order.food_items:
        raise HTTPException(status_code=400, detail="Order must contain at least one item")
    
-   # this validate that items exist on the restaurant menu
    for item in order.food_items:
        validate_menu_item(order.restaurant_id, item, db)    
 
@@ -112,11 +111,9 @@ def remove_item(order_id: str, food_item: str, db: Session = Depends(get_db)):
 def update_item_quantity(order_id: str, food_item: str, quantity: int, db: Session = Depends(get_db)):
     ensure_order_not_completed(order_id, db)
     
-    #this validates that the quanity is positive
     if quantity < 0:
         raise HTTPException(status_code=422, detail="Quantity cannot be negative")
     
-    #get all rows for this item in the order
     items = db.query(Order).filter(
         Order.combined_order_id == order_id,
         Order.food_item == food_item
@@ -145,7 +142,7 @@ def update_item_quantity(order_id: str, food_item: str, quantity: int, db: Sessi
     db.commit()
     return {"message": f"'{food_item}' quantity updated to {quantity}"}
 
-# order validation
+"""order validation"""
 def validate_order(order_id: str, db: Session):
     items = db.query(Order).filter(Order.combined_order_id == order_id).all()
 

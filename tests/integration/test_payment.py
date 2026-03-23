@@ -113,7 +113,7 @@ def test_checkout_success():
     assert data["success"] == True
     assert data["message"] == "Payment successful"
 
-# Verifies checkout fails for non-existent order
+"""Verifies checkout fails for non-existent order"""
 def test_checkout_order_not_found():
     response = client.post("/payments/checkout", json={
         "order_id": "Str1ng",
@@ -122,7 +122,7 @@ def test_checkout_order_not_found():
     })
     assert response.status_code == 404
 
-# Verifies checkout accepts valid simulated input formats
+"""Verifies checkout accepts valid simulated input formats"""
 def test_checkout_accepts_valid_input():
     order_response = client.post("/orders/", json={
         "order_id": "Str1ng",

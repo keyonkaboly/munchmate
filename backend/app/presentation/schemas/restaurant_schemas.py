@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
-#this file is for restaurant schemas, which will be used for restaurant info 
+"""this file is for restaurant schemas, which will be used for restaurant info"""
 class RestaurantUpdate(BaseModel):
     id: int
     location: Optional[str] = None

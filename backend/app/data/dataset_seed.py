@@ -2,9 +2,8 @@ from app.data.dataset_loader import load_dataset
 from app.infrastructure.database.database import SessionLocal
 from app.infrastructure.database.models import Restaurant, MenuItem, Order
 
-
+"""Seed unique restaurants from the dataset into the database."""
 def seed_restaurants(result, db_session):
-    """Seed unique restaurants from the dataset into the database."""
     CUISINE_MAP = {
     "Pizza": "Italian", "Pasta": "Italian",
     "Sushi": "Asian", "Briyani rice": "Asian", "Chicken rice": "Asian", "Dumplings": "Asian",
@@ -91,9 +90,8 @@ def seed_order_data(result, db_session):
     db_session.commit()
     return order_count
 
-
+"""Load the dataset and seed restaurants plus menu items."""
 def seed_dataset_data():
-    """Load the dataset and seed restaurants plus menu items."""
     db_session = SessionLocal()
 
     try:

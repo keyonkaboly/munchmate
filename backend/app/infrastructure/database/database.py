@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# Creates database connection string
+"""Creates database connection string"""""
 DATABASE_URL = "sqlite:///./munchmate.db"
 
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})

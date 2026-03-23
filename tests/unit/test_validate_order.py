@@ -47,7 +47,6 @@ def setup_database():
 
 
 def test_order_valid_items_are_accepted():
-    """Valid menu items -> order is created successfully."""
     response = client.post("/orders/create", json={
         "customer_id": 1,
         "restaurant_id": 1,
@@ -58,7 +57,6 @@ def test_order_valid_items_are_accepted():
 
 
 def test_order_invalid_item_is_rejected():
-    """Item not on the menu -> 404 with the item name in the error."""
     response = client.post("/orders/create", json={
         "customer_id": 1,
         "restaurant_id": 1,

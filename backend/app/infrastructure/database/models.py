@@ -3,10 +3,6 @@ from .database import Base
 
 class Customer(Base):
     __tablename__ = "customers"
-
-    # Passwords can be the same, but usernames and emails must be unique
-    # id is a unique identifier for each row in the table
-    # None of these items are allowed to be null.
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, nullable=False)
     email = Column(String, unique=True, nullable=False)
@@ -14,7 +10,7 @@ class Customer(Base):
     user_type = Column(String, nullable=False, default="customer")
     restaurant_manager_restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable=True)
 
-# Restaurant table definition
+
 class Restaurant(Base):
     __tablename__ = "restaurants"
     
@@ -29,18 +25,13 @@ class MenuItem(Base):
     __tablename__ = "menu_items"
     id = Column(Integer, primary_key=True, index=True)
     
-    # Using composite primary key here - name + restaurant_id together
     food_item = Column(String, nullable=False)
-    
     restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable=False)
     price = Column(Float, nullable=True)
     is_halal = Column(Boolean, default=False)
     is_vegetarian = Column(Boolean, default=False)
     
-    # This means each restaurant can have items with same name
-    # but the combination of name+restaurant_id must be unique
-    # Not sure if this is the best approach tbh, might want to reconsider using an id field instead
-
+    
 """Base class for order. note: ForeignKey is used to referencing row in diff table """
 class Order(Base):
     __tablename__ = "orders"

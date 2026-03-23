@@ -28,7 +28,7 @@ def override_current_user(user):
 
 
 
-# setup test data
+"""setup test data"""
 def create_test_data(db: Session):
     #create restaurants
     r1 = Restaurant(id=1, location="Test1", food_item="Pizza")
@@ -37,7 +37,6 @@ def create_test_data(db: Session):
     db.add_all([r1, r2])
     db.commit()
 
-    #create orders
     order1 = Order(order_id="o1", restaurant_id=1)
     order2 = Order(order_id="o2", restaurant_id=1)
     order3 = Order(order_id="o3", restaurant_id=2)
@@ -49,7 +48,7 @@ def create_test_data(db: Session):
 
 
 
-#manager can access own restaurant
+"""manager can access own restaurant"""
 def test_manager_can_access_own_orders():
     db = next(get_db())
     create_test_data(db)
@@ -63,7 +62,6 @@ def test_manager_can_access_own_orders():
         restaurant_manager_restaurant_id=1
     )
 
-    # override auth
     app.dependency_overrides[get_current_user] = override_current_user(manager)
 
     response = client.get("/restaurants/1/orders")
@@ -77,7 +75,7 @@ def test_manager_can_access_own_orders():
 
 
 
-#normal user gets 403
+"""normal user gets 403"""
 def test_normal_user_cannot_access_orders():
     db = next(get_db())
     create_test_data(db)
@@ -101,7 +99,7 @@ def test_normal_user_cannot_access_orders():
 
 
 
-#manager cannot access other restaurant
+"""manager cannot access other restaurant"""
 def test_manager_cannot_access_other_restaurant():
     db = next(get_db())
     create_test_data(db)
