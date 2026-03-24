@@ -1,12 +1,12 @@
 # Simulates payment processing without a real payment gateway
-def simulate_payment(total_price: float, card_number: str) -> dict:
+def simulate_payment(total_cost: float, card_number: str) -> dict:
     """
     Simulates payment based on predefined rules.
     - Cards ending in 0000 are always declined
-    - Orders with total_price <= 0 are rejected
+    - Orders with total_cost <= 0 are rejected
     - Everything else succeeds
     """
-    if total_price <= 0:
+    if total_cost <= 0:
         return {
             "success": False,
             "message": "Payment failed: invalid order amount"

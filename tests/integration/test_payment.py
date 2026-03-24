@@ -55,7 +55,7 @@ def test_payment_success():
     combined_order_id = order_response.json()["combined_order_id"]
     response = client.post("/payments/", json={
         "order_id": combined_order_id,
-        "total_price": 25.99,
+        "total_cost": 25.99,
         "card_number": "1234567890001234"
     })
     assert response.status_code == 200
@@ -73,7 +73,7 @@ def test_payment_declined_card():
     combined_order_id = order_response.json()["combined_order_id"]
     response = client.post("/payments/", json={
         "order_id": combined_order_id,
-        "total_price": 25.99,
+        "total_cost": 25.99,
         "card_number": "1234567890000000"
     })
     assert response.status_code == 200
@@ -92,7 +92,7 @@ def test_payment_simulation_only():
     combined_order_id = order_response.json()["combined_order_id"]
     response = client.post("/payments/", json={
         "order_id": combined_order_id,
-        "total_price": 50.00,
+        "total_cost": 50.00,
         "card_number": "9999999999999999"
     })
     assert response.status_code == 200
@@ -110,7 +110,7 @@ def test_checkout_success():
     combined_order_id = order_response.json()["combined_order_id"]
     response = client.post("/payments/checkout", json={
         "order_id": combined_order_id,
-        "total_price": 25.99,
+        "total_cost": 25.99,
         "card_number": "1234567890001234"
     })
     assert response.status_code == 200
@@ -122,7 +122,7 @@ def test_checkout_success():
 def test_checkout_order_not_found():
     response = client.post("/payments/checkout", json={
         "order_id": "Str1ng",
-        "total_price": 25.99,
+        "total_cost": 25.99,
         "card_number": "1234567890001234"
     })
     assert response.status_code == 404
@@ -137,7 +137,7 @@ def test_checkout_accepts_valid_input():
     combined_order_id = order_response.json()["combined_order_id"]
     response = client.post("/payments/checkout", json={
         "order_id": combined_order_id,
-        "total_price": 50.00,
+        "total_cost": 50.00,
         "card_number": "9999999999999999"
     })
     assert response.status_code == 200
