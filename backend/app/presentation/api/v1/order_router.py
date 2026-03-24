@@ -8,6 +8,60 @@ from app.presentation.schemas.delivery_schemas import OrderCreate, OrderResponse
 
 router_order = APIRouter(prefix="/orders", tags=["orders"])
 
+DELIVERY_METHOD_RANK = {"Walk": 1, "Bike": 2, "Car": 3}
+ROUTE_TYPE_RANK = {"Bike-friendly": 1, "Mixed": 2, "Car-only": 3}
+
+def get_most_restrictive_delivery(restaurant_id: int, food_items: list, db: Session) -> dict:
+    matching_rows = db.query(Order).filter(
+        Order.restaurant_id == restaurant_id,
+        Order.food_item.in_(food_items),
+        Order.status == "Created"
+    ).all()
+
+    if not matching_rows:
+        return {
+            "delivery_method": None,
+            "delivery_distance": None,
+            "delivery_delay": None,
+            "route_taken": None,
+            "route_type": None,
+            "route_efficiency": None,
+        }
+
+    best_method = matching_rows[0].delivery_method
+    best_route_type = matching_rows[0].route_type
+    max_delay = matching_rows[0].delivery_delay
+    max_distance = matching_rows[0].delivery_distance
+    min_efficiency = matching_rows[0].route_efficiency
+    worst_delay_row = matching_rows[0]
+
+    for row in matching_rows:
+        if DELIVERY_METHOD_RANK.get(row.delivery_method, 0) > DELIVERY_METHOD_RANK.get(best_method, 0):
+            best_method = row.delivery_method
+
+        if ROUTE_TYPE_RANK.get(row.route_type, 0) > ROUTE_TYPE_RANK.get(best_route_type, 0):
+            best_route_type = row.route_type
+
+        if row.delivery_delay is not None and row.delivery_delay > max_delay:
+            max_delay = row.delivery_delay
+            worst_delay_row = row
+
+        if row.delivery_distance is not None and row.delivery_distance > max_distance:
+            max_distance = row.delivery_distance
+
+        if row.route_efficiency is not None and row.route_efficiency < min_efficiency:
+            min_efficiency = row.route_efficiency
+
+    return {
+        "delivery_method": best_method,
+        "delivery_distance": max_distance,
+        "delivery_delay": max_delay,
+        "route_taken": worst_delay_row.route_taken,
+        "route_type": best_route_type,
+        "route_efficiency": min_efficiency,
+    }
+
+
 # helper func
 def get_order_or_404(combined_order_id: str, db: Session) -> Order:
     order = db.query(Order).filter(Order.combined_order_id == combined_order_id).first()
@@ -60,7 +114,8 @@ def create_order(order: StartOrderRequest, db: Session = Depends(get_db)):
             combined_order_id=combined_order_id,
             restaurant_id=order.restaurant_id,
             food_item=item,
-            customer_id=order.customer_id
+            customer_id=order.customer_id,
+            total_cost=25.99
         )
         db.add(new_order)
     
@@ -182,11 +237,20 @@ def complete_order(order_id: str, db: Session = Depends(get_db)):
             detail="Order must be in progress before it can be completed"
         )
 
+    food_items = [item.food_item for item in items]
+    delivery_info = get_most_restrictive_delivery(items[0].restaurant_id, food_items, db)
+
     for item in items:
         item.status = "Completed"
+        item.delivery_method = delivery_info["delivery_method"]
+        item.delivery_distance = delivery_info["delivery_distance"]
+        item.delivery_delay = delivery_info["delivery_delay"]
+        item.route_taken = delivery_info["route_taken"]
+        item.route_type = delivery_info["route_type"]
+        item.route_efficiency = delivery_info["route_efficiency"]
 
     db.commit()
-    return {"message": f"Order {order_id} completed"}
+    return {"message": f"Order {order_id} completed", "delivery_info": delivery_info}
 
 @router_order.patch("/{order_id}/cancel")
 def cancel_order(order_id: str, db: Session = Depends(get_db)):

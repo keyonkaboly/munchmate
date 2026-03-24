@@ -90,7 +90,20 @@ def seed_order_data(result, db_session):
         exist = db_session.query(Order).filter(Order.order_id == order_id).first()
 
         if not exist:
-            order = Order(order_id=order_id, customer_id=customer_id, restaurant_id=restaurant_id, subtotal=subtotal, tax=tax,delivery_cost=delivery_cost, total_cost=total_cost)
+            order = Order(
+                order_id=order_id, 
+                customer_id=customer_id, 
+                restaurant_id=restaurant_id, 
+                subtotal=subtotal, tax=tax,
+                delivery_cost=delivery_cost, 
+                total_cost=total_cost
+                delivery_method=str(row['delivery_method']),
+                delivery_distance=float(row['delivery_distance']),
+                delivery_delay=float(row['delivery_delay']),
+                route_taken=str(row['route_taken']),
+                route_type=str(row['route_type']),
+                route_efficiency=float(row['route_efficiency'])
+            )
             db_session.add(order)
             order_count += 1
     db_session.commit()
