@@ -1,3 +1,4 @@
+from backend.app.infrastructure.database.models import Order
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
@@ -35,6 +36,7 @@ def setup_database():
     menu_item = MenuItem(id=1, food_item="Pizza", restaurant_id=1)
     db.add(menu_item)
 
+    db.add(Order(order_id="Str1ng", combined_order_id="Str1ng", customer_id=1, restaurant_id=1, subtotal=25.99, total_cost=25.99))
     db.commit()
     db.close()
 
