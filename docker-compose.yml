@@ -12,6 +12,8 @@ services:
       - ./backend/app:/app/app
     environment:
       - DATABASE_URL=sqlite:///./munchmate.db
+    env_file:
+      - .env
     depends_on:
       - db
     restart: unless-stopped

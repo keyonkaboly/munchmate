@@ -67,8 +67,10 @@ def test_no_filter_returns_all():
 def test_filter_no_results():
     response = client.get("/restaurants/?is_halal=true&is_vegetarian=true")
     assert response.status_code == 200
-    assert response.json() == {"message": "No restaurants found"}
-
+    data = response.json()
+    assert data["items"] == []
+    assert data["total"] == 0
+    
 # filtering by cuisine type
 def test_filter_by_cuisine_type():
     response = client.get("/restaurants/?cuisine_type=Italian")

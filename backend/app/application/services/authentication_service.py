@@ -2,15 +2,13 @@ from fastapi import Cookie, Depends, HTTPException
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
 
-from app.infrastructure.security.hashing import SECRET_KEY, ALGORITHM
-from app.infrastructure.database.models import Customer
 from app.infrastructure.database.database import get_db
 from app.infrastructure.security.hashing import SECRET_KEY, ALGORITHM
 from app.infrastructure.database.models import Customer
 
 
 def get_current_user(
-    access_token: str | None = Cookie(default=None),
+    access_token: str | None = Cookie(None),
     db: Session = Depends(get_db)
 ):
     if not access_token:

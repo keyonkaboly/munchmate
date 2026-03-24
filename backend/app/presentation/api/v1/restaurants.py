@@ -23,19 +23,25 @@ def get_filtered_restaurants(
     "Returns restaurants filtered by dietary options and includes page numbers."
     query = apply_dietary_filters(db, is_halal=is_halal, is_vegetarian=is_vegetarian, cuisine_type=cuisine_type, return_query=True)
 
-    if query.count() == 0:
-        return {"message": "No restaurants found"}
+    result = paginate(query, page=page, page_size=page_size)
+    result["items"] = [RestaurantResponse.model_validate(item).model_dump() for item in result["items"]]
+    return result
 
-    return paginate(query, page=page, page_size=page_size)
-
-@router.get("/{restaurant_id}", response_model=RestaurantResponse)
+@router.get("/{restaurant_id}")
 def get_restaurant(restaurant_id: int, db: Session = Depends(get_db)):
     restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
-    
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant ID not found")
+
+    menu_items = db.query(MenuItem).filter(MenuItem.restaurant_id == restaurant_id).all()
+
+    menu_items_list = []
+    for item in menu_items:
+        menu_items_list.append( {"food_item": item.food_item, "price": item.price, "is_halal": item.is_halal,"is_vegetarian": item.is_vegetarian})
     
-    return restaurant
+    response = restaurant.__dict__.copy()
+    response["menu_items"] = menu_items_list
+    return response
 
 """Search for menu items within a specific restaurant using string text query.
 The return is any matches that partially match the string query text.
@@ -98,22 +104,6 @@ def get_menu_item(restaurant_id: int, food_item: str, db: Session = Depends(get_
 
     return response
 
-# updates to restaurant details, only for restaurant owners 
-@router.put("/{restaurant_id}", response_model=RestaurantResponse)
-def update_restaurant(restaurant_id: int, data: RestaurantUpdate, db: Session = Depends(get_db)): # takes rest. ID from URL and new data from the request body 
-    """Allow a restaurant owner to update their restaurant's details."""
-    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first() # looks up restauraunt to see if exists
-    if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant ID not found")
-
-   # overwrites old values with new ones from the request `
-    restaurant.id = data.id
-    restaurant.location = data.location
-    restaurant.food_item = data.food_item
-
-    db.commit()
-    db.refresh(restaurant)
-    return restaurant
 
 @router.put("/{restaurant_id}/menu-items/{food_item}")
 def rename_menu_item(restaurant_id: int, food_item: str, data: MenuItemNameUpdate, manager_user_id: int = Query(...), db: Session = Depends(get_db)):

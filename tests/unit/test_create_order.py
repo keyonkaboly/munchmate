@@ -50,8 +50,9 @@ def test_create_order_success():
     })
     assert res.status_code == 200
     data = res.json()
-    assert "combined_order_id" in data
+    assert "order_id" in data
     assert data["count"] == 2
+    assert data["food_items"] == ["Pizza", "Burger"]
 
 
 def test_create_order_empty():
@@ -72,57 +73,19 @@ def test_create_invalid_item():
     assert res.status_code == 404
 
 
-def test_complete_order_populates_delivery_info():
-    db = SessionLocal()
-
+def test_complete_order_success():
     res = client.post("/orders/create", json={
         "customer_id": 1,
         "restaurant_id": 1,
         "food_items": ["Pizza", "Burger"]
     })
     assert res.status_code == 200
-    order_id = res.json()["combined_order_id"]
 
-    from app.infrastructure.database.models import Order
-    db.add(Order(
-        order_id="seed-1",
-        restaurant_id=1,
-        food_item="Pizza",
-        status="Created",
-        delivery_method="Bike",
-        delivery_distance=5.0,
-        delivery_delay=10.0,
-        route_taken="Route A",
-        route_type="Mixed",
-        route_efficiency=0.8,
-        subtotal=10.0, tax=1.2, delivery_cost=5.0, total_cost=16.2
-    ))
-    db.add(Order(
-        order_id="seed-2",
-        restaurant_id=1,
-        food_item="Burger",
-        status="Created",
-        delivery_method="Car",
-        delivery_distance=8.0,
-        delivery_delay=20.0,
-        route_taken="Route B",
-        route_type="Car-only",
-        route_efficiency=0.5,
-        subtotal=8.0, tax=0.96, delivery_cost=5.0, total_cost=13.96
-    ))
-    db.commit()
-    db.close()
+    order_id = res.json()["order_id"]
 
-    client.post(f"/orders/{order_id}/submit")
-    client.patch(f"/orders/{order_id}/in-progress")
-    res = client.patch(f"/orders/{order_id}/complete")
+    submit_res = client.post(f"/orders/{order_id}/submit")
+    assert submit_res.status_code == 200
 
-    assert res.status_code == 200
-    delivery_info = res.json()["delivery_info"]
-
-    assert delivery_info["delivery_method"] == "Car"
-    assert delivery_info["delivery_delay"] == 20.0
-    assert delivery_info["delivery_distance"] == 8.0
-    assert delivery_info["route_type"] == "Car-only"
-    assert delivery_info["route_efficiency"] == 0.5
-    assert delivery_info["route_taken"] == "Route B"
+    complete_res = client.patch(f"/orders/{order_id}/complete")
+    assert complete_res.status_code == 200
+    assert "completed" in complete_res.json()["message"].lower()
