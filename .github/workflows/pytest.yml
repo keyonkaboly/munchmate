@@ -36,4 +36,4 @@ jobs:
           PYTHONPATH: /home/runner/work/munchmate/munchmate/backend
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
-          pytest tests/unit -v --tb=short --cov=backend --cov-report=term-missing
+          pytest tests/unit tests/integration -v --tb=short --cov=app --cov-report=term-missing
