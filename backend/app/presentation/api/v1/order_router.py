@@ -23,12 +23,12 @@ def get_order_items_or_404(combined_order_id: str, db: Session):
     return items
 
 #prevents any modification once order is completed
-def ensure_order_not_completed(combined_order_id: str, db: Session):
+def ensure_order_editable(combined_order_id: str, db: Session):
     items = get_order_items_or_404(combined_order_id, db)
-    if items[0].status == "Completed":
+    if items[0].status != "Created":
         raise HTTPException(
             status_code=400,
-            detail="Cannot modify a completed order"
+            detail="This order can no longer be modified"
         )
     return items
 
@@ -43,6 +43,18 @@ def validate_menu_item(restaurant_id: int, food_item: str, db: Session):
             status_code=404,
             detail=f"'{food_item}' does not exist on this restaurant's menu"
         )
+
+# order validation
+def validate_order(combined_order_id: str, db: Session):
+    items = get_order_items_or_404(combined_order_id, db)
+
+    if not items:
+        raise HTTPException(status_code=400, detail="Order has no items")
+
+    for item in items:
+        validate_menu_item(item.restaurant_id, item.food_item, db)
+
+    return items
 
 @router_order.post("/create")
 def create_order(order: StartOrderRequest, db: Session = Depends(get_db)):
@@ -60,7 +72,8 @@ def create_order(order: StartOrderRequest, db: Session = Depends(get_db)):
             combined_order_id=combined_order_id,
             restaurant_id=order.restaurant_id,
             food_item=item,
-            customer_id=order.customer_id
+            customer_id=order.customer_id,
+            status="Created"
         )
         db.add(new_order)
     
@@ -76,7 +89,7 @@ def create_order(order: StartOrderRequest, db: Session = Depends(get_db)):
 
 @router_order.post("/{order_id}/add-item")
 def add_item(order_id: str, food_item: str, db: Session = Depends(get_db)):
-    items = ensure_order_not_completed(order_id, db)
+    items = ensure_order_editable(order_id, db)
     order = items[0]
     
     validate_menu_item(order.restaurant_id, food_item, db)
@@ -85,17 +98,16 @@ def add_item(order_id: str, food_item: str, db: Session = Depends(get_db)):
         combined_order_id=order_id,
         restaurant_id=order.restaurant_id,
         customer_id=order.customer_id,
-        food_item=food_item
+        food_item=food_item,
+        status="Created"
     )
     db.add(new_item)
     db.commit()
     return {"message": f"'{food_item}' added to order {order_id}"}
 
-
-
 @router_order.delete("/{order_id}/remove-item")
 def remove_item(order_id: str, food_item: str, db: Session = Depends(get_db)):
-    ensure_order_not_completed(order_id, db)
+    ensure_order_editable(order_id, db)
     
     item = db.query(Order).filter(
         Order.combined_order_id == order_id,
@@ -111,7 +123,7 @@ def remove_item(order_id: str, food_item: str, db: Session = Depends(get_db)):
 
 @router_order.patch("/{order_id}/update-item")
 def update_item_quantity(order_id: str, food_item: str, quantity: int, db: Session = Depends(get_db)):
-    ensure_order_not_completed(order_id, db)
+    ensure_order_editable(order_id, db)
     
     #this validates that the quanity is positive
     if quantity < 0:
@@ -137,7 +149,8 @@ def update_item_quantity(order_id: str, food_item: str, quantity: int, db: Sessi
                 combined_order_id=order_id,
                 restaurant_id=items[0].restaurant_id,
                 customer_id=items[0].customer_id,
-                food_item=food_item
+                food_item=food_item,
+                status="Created"
             ))
     elif quantity < current_qty:
         for item in items[quantity:]:
@@ -146,21 +159,9 @@ def update_item_quantity(order_id: str, food_item: str, quantity: int, db: Sessi
     db.commit()
     return {"message": f"'{food_item}' quantity updated to {quantity}"}
 
-# order validation
-def validate_order(order_id: str, db: Session):
-    items = db.query(Order).filter(Order.combined_order_id == order_id).all()
-
-    if not items:
-        raise HTTPException(status_code=400, detail="Order has no items")
-
-    for item in items:
-        validate_menu_item(item.restaurant_id, item.food_item, db)
-
-    return items
-
 @router_order.post("/{order_id}/submit")
 def submit_order(order_id: str, db: Session = Depends(get_db)):
-    ensure_order_not_completed(order_id, db)
+    ensure_order_editable(order_id, db)
     items = validate_order(order_id, db)
 
     if items[0].status == "Submitted":
@@ -176,10 +177,10 @@ def submit_order(order_id: str, db: Session = Depends(get_db)):
 def complete_order(order_id: str, db: Session = Depends(get_db)):
     items = get_order_items_or_404(order_id, db)
 
-    if items[0].status != "In Progress":
+    if items[0].status != "Submitted":
         raise HTTPException(
             status_code=400,
-            detail="Order must be in progress before it can be completed"
+            detail="Order must be submitted before it can be completed"
         )
 
     for item in items:
@@ -190,8 +191,13 @@ def complete_order(order_id: str, db: Session = Depends(get_db)):
 
 @router_order.patch("/{order_id}/cancel")
 def cancel_order(order_id: str, db: Session = Depends(get_db)):
-    ensure_order_not_completed(order_id, db)
     items = get_order_items_or_404(order_id, db)
+    
+    if items[0].status in ["Completed", "Canceled"]:
+        raise HTTPException(
+            status_code=400,
+            detail="This order cannot be canceled"
+        )
 
     for item in items:
         item.status = "Canceled"
@@ -230,7 +236,7 @@ def get_customer_orders(customer_id: str, db: Session = Depends(get_db)):
     past_orders = []
 
     for grouped_order in grouped_orders.values():
-        if grouped_order["status"] in ["Submitted", "In Progress"]:
+        if grouped_order["status"] in ["Created", "Submitted"]:
             current_orders.append(grouped_order)
         elif grouped_order["status"] in ["Completed", "Canceled"]:
             past_orders.append(grouped_order)
