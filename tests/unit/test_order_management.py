@@ -41,7 +41,6 @@ def setup():
     Base.metadata.drop_all(bind=engine)
     app.dependency_overrides = previous_overrides
 
-
 @pytest.fixture
 def order_id():
     res = client.post("/orders/create", json={
@@ -49,18 +48,17 @@ def order_id():
         "restaurant_id": 1,
         "food_items": ["Pizza"]
     })
-    return res.json()["combined_order_id"]
+    assert res.status_code == 200
+    return res.json()["order_id"]
 
 
 def test_add_item(order_id):
     res = client.post(f"/orders/{order_id}/add-item", params={"food_item": "Burger"})
     assert res.status_code == 200
 
-
 def test_remove_item(order_id):
     res = client.delete(f"/orders/{order_id}/remove-item", params={"food_item": "Pizza"})
     assert res.status_code == 200
-
 
 def test_update_quantity(order_id):
     res = client.patch(
@@ -75,9 +73,7 @@ def test_update_quantity(order_id):
         Order.food_item == "Pizza"
     ).all()
     db.close()
-
     assert len(items) == 3
-
 
 def test_submit(order_id):
     res = client.post(f"/orders/{order_id}/submit")
@@ -86,5 +82,4 @@ def test_submit(order_id):
     db = SessionLocal()
     items = db.query(Order).filter(Order.combined_order_id == order_id).all()
     db.close()
-
     assert all(i.status == "Submitted" for i in items)
