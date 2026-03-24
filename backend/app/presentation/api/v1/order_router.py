@@ -136,6 +136,7 @@ def create_order(order: StartOrderRequest, db: Session = Depends(get_db)):
    return {
         "message": "Order created successfully",
         "order_id": combined_order_id,
+        "combined_order_id": combined_order_id,
         "food_items": order.food_items,
         "count": len(order.food_items)
     }
@@ -290,7 +291,13 @@ def get_customer_orders(customer_id: str, db: Session = Depends(get_db)):
                 "restaurant_id": order.restaurant_id,
                 "customer_id": order.customer_id,
                 "status": order.status,
-                "food_items": []
+                "food_items": [],
+                "delivery_method": order.delivery_method,
+                "delivery_distance": order.delivery_distance,
+                "delivery_delay": order.delivery_delay,
+                "route_taken": order.route_taken,
+                "route_type": order.route_type,
+                "route_efficiency": order.route_efficiency
             }
 
         grouped_orders[order_id]["food_items"].append(order.food_item)
@@ -310,20 +317,11 @@ def get_customer_orders(customer_id: str, db: Session = Depends(get_db)):
         "past_orders": past_orders
     }
 
-@router_order.post("/", response_model=OrderResponse)
-def create_delivery_order(data: OrderCreate, db: Session = Depends(get_db)):
-    existing_order = db.query(Order).filter(Order.order_id == data.order_id).first()
-    if existing_order:
-        raise HTTPException(status_code=409, detail="Order ID already exists")
-    order = Order(**data.model_dump())
-    db.add(order)
-    db.commit()
-    db.refresh(order)
-    return order
-
 @router_order.get("/{order_id}", response_model=OrderResponse)
 def get_delivery_order(order_id: str, db: Session = Depends(get_db)):
-    order = db.query(Order).filter(Order.order_id == order_id).first()
+    order = db.query(Order).filter((Order.order_id == order_id) | (Order.combined_order_id == order_id)).first()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+    if order.order_id is None:
+        order.order_id = order.combined_order_id
     return order

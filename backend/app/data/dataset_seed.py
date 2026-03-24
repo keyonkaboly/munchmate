@@ -96,7 +96,7 @@ def seed_order_data(result, db_session):
                 restaurant_id=restaurant_id, 
                 subtotal=subtotal, tax=tax,
                 delivery_cost=delivery_cost, 
-                total_cost=total_cost
+                total_cost=total_cost,
                 delivery_method=str(row['delivery_method']),
                 delivery_distance=float(row['delivery_distance']),
                 delivery_delay=float(row['delivery_delay']),

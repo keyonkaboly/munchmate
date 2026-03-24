@@ -7,11 +7,14 @@ from app.presentation.api.v1 import payments
 from app.presentation.api.v1 import notifications
 from app.presentation.api.v1 import search
 from app.presentation.api.v1.order_router import router_order
+from app.data.dataset_seed import seed_dataset_data
 
 app = FastAPI(title="munchmate")
 
 # Creates tables
 Base.metadata.create_all(bind=engine)
+seed_dataset_data()
+
 
 app.include_router(router_auth)
 

@@ -24,9 +24,9 @@ def process_payment(data: PaymentRequest, db: Session = Depends(get_db)):
     orders = db.query(Order).filter(Order.combined_order_id == data.order_id).all()
     if not orders:
         raise HTTPException(status_code=404, detail="Order not found")
-    total_price = sum(o.total_cost for o in orders if o.total_cost)
-    result = simulate_payment(total_price, data.card_number)
-    return build_payment_response(data.order_id, total_price, result)
+    total_price = sum(o.total_cost for o in orders if o.total_cost) or data.total_price
+    result = simulate_payment(data.total_price, data.card_number)
+    return build_payment_response(data.order_id, data.total_price, result)
 
 
 @router.post("/checkout", response_model=PaymentResponse)
@@ -35,9 +35,9 @@ def checkout(data: PaymentRequest, db: Session = Depends(get_db)):
     orders = db.query(Order).filter(Order.combined_order_id == data.order_id).all()
     if not orders:
         raise HTTPException(status_code=404, detail="Order not found")
-    total_price = sum(o.total_cost for o in orders if o.total_cost)
-    result = simulate_payment(total_price, data.card_number)
-    return build_payment_response(data.order_id, total_price, result)
+    total_price = sum(o.total_cost for o in orders if o.total_cost) or data.total_price
+    result = simulate_payment(data.total_price, data.card_number)
+    return build_payment_response(data.order_id, data.total_price, result)
 
 @router.get("/confirmation/{order_id}")
 def get_payment_confirmation(order_id: str, db: Session = Depends(get_db)):
