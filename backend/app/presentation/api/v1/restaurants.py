@@ -25,6 +25,8 @@ def get_filtered_restaurants(
 
     result = paginate(query, page=page, page_size=page_size)
     result["items"] = [RestaurantResponse.model_validate(item).model_dump() for item in result["items"]]
+    if not result["items"]:
+        return {"message": "No restaurants found"}
     return result
 
 @router.get("/{restaurant_id}")
