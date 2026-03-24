@@ -1,4 +1,3 @@
-# Simulates payment processing without a real payment gateway
 def simulate_payment(total_cost: float, card_number: str) -> dict:
     """
     Simulates payment based on predefined rules.
