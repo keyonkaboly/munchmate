@@ -68,7 +68,7 @@ def create_order(order: StartOrderRequest, db: Session = Depends(get_db)):
 
    return {
         "message": "Order created successfully",
-        "combined_order_id": combined_order_id,
+        "order_id": combined_order_id,
         "food_items": order.food_items,
         "count": len(order.food_items)
     }
@@ -233,7 +233,7 @@ def get_customer_orders(customer_id: str, db: Session = Depends(get_db)):
 
         if order_id not in grouped_orders:
             grouped_orders[order_id] = {
-                "combined_order_id": order.combined_order_id,
+                "order_id": order.combined_order_id,
                 "restaurant_id": order.restaurant_id,
                 "customer_id": order.customer_id,
                 "status": order.status,
