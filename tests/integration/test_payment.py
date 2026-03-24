@@ -53,6 +53,7 @@ def test_payment_success():
         "food_items": ["Pizza"]
     })
     combined_order_id = order_response.json()["combined_order_id"]
+    client.post(f"/checkout/orders/{combined_order_id}/place")
     response = client.post("/payments/", json={
         "order_id": combined_order_id,
         "total_cost": 25.99,
@@ -71,6 +72,7 @@ def test_payment_declined_card():
         "food_items": ["Pizza"]
     })
     combined_order_id = order_response.json()["combined_order_id"]
+    client.post(f"/checkout/orders/{combined_order_id}/place")
     response = client.post("/payments/", json={
         "order_id": combined_order_id,
         "total_cost": 25.99,
@@ -90,6 +92,7 @@ def test_payment_simulation_only():
         "food_items": ["Pizza"]
     })
     combined_order_id = order_response.json()["combined_order_id"]
+    client.post(f"/checkout/orders/{combined_order_id}/place")
     response = client.post("/payments/", json={
         "order_id": combined_order_id,
         "total_cost": 50.00,
@@ -108,6 +111,7 @@ def test_checkout_success():
         "food_items": ["Pizza"]
     })
     combined_order_id = order_response.json()["combined_order_id"]
+    client.post(f"/checkout/orders/{combined_order_id}/place")
     response = client.post("/payments/checkout", json={
         "order_id": combined_order_id,
         "total_cost": 25.99,
@@ -135,6 +139,7 @@ def test_checkout_accepts_valid_input():
         "food_items": ["Pizza"]
     })
     combined_order_id = order_response.json()["combined_order_id"]
+    client.post(f"/checkout/orders/{combined_order_id}/place")
     response = client.post("/payments/checkout", json={
         "order_id": combined_order_id,
         "total_cost": 50.00,
