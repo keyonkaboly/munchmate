@@ -23,12 +23,32 @@ def build_payment_response(order_id: str, total_cost: float, result: dict) -> Pa
 @router.post("/", response_model=PaymentResponse)
 def process_payment(data: PaymentRequest, db: Session = Depends(get_db)):
     """Simulate payment processing using the actual combined order total from the database."""
+
+    # If client provided an invalid total_cost, reject it
+    if data.total_cost is not None and data.total_cost <= 0:
+        return PaymentResponse(
+            order_id=data.order_id,
+            total_cost=data.total_cost,
+            success=False,
+            message="Invalid payment amount"
+        )
+
     orders = db.query(Order).filter(Order.combined_order_id == data.order_id).all()
 
     if not orders:
         raise HTTPException(status_code=404, detail="Order not found")
 
+    # Calculate total from DB
     total_cost = sum(o.total_cost for o in orders if o.total_cost)
+
+    # Reject invalid totals from database
+    if total_cost <= 0:
+        return PaymentResponse(
+            order_id=data.order_id,
+            total_cost=total_cost,
+            success=False,
+            message="Invalid payment amount"
+        )
 
     result = simulate_payment(total_cost, data.card_number)
 
@@ -49,6 +69,15 @@ def checkout(data: PaymentRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Order not found")
 
     total_cost = sum(o.total_cost for o in orders if o.total_cost)
+
+    # Reject invalid totals
+    if total_cost <= 0:
+        return PaymentResponse(
+            order_id=data.order_id,
+            total_cost=total_cost,
+            success=False,
+            message="Invalid payment amount"
+        )
 
     result = simulate_payment(total_cost, data.card_number)
 
@@ -87,6 +116,14 @@ def retry_payment(order_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Order not found")
 
     total_cost = sum(o.total_cost for o in orders if o.total_cost)
+
+    # Reject invalid totals
+    if total_cost <= 0:
+        return {
+            "message": "Invalid payment amount",
+            "order_id": order_id,
+            "payment_status": "failed"
+        }
 
     result = simulate_payment(total_cost, "4111111111111111")
 
