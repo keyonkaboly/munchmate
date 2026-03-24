@@ -158,7 +158,16 @@ def add_item(order_id: str, food_item: str, db: Session = Depends(get_db)):
     )
     db.add(new_item)
     db.commit()
-    return {"message": f"'{food_item}' added to order {order_id}"}
+    
+    all_items = db.query(Order).filter(Order.combined_order_id == order_id).all()
+    food_items = [item.food_item for item in all_items]
+
+    return {
+        "message": f"'{food_item}' added to order",
+        "combined_order_id": order_id,
+        "food_items": food_items,
+        "count": len(food_items)
+    }
 
 @router_order.delete("/{order_id}/remove-item")
 def remove_item(order_id: str, food_item: str, db: Session = Depends(get_db)):
@@ -173,7 +182,19 @@ def remove_item(order_id: str, food_item: str, db: Session = Depends(get_db)):
     
     db.delete(item)
     db.commit()
-    return {"message": f"'{food_item}' removed from order {order_id}"}
+    
+    remaining_items = db.query(Order).filter(
+        Order.combined_order_id == order_id
+    ).all()
+
+    food_items = [i.food_item for i in remaining_items]
+
+    return {
+        "message": f"'{food_item}' removed from order",
+        "combined_order_id": order_id,
+        "food_items": food_items,
+        "count": len(food_items)
+    }
 
 
 @router_order.patch("/{order_id}/update-item")
@@ -212,7 +233,19 @@ def update_item_quantity(order_id: str, food_item: str, quantity: int, db: Sessi
             db.delete(item)
 
     db.commit()
-    return {"message": f"'{food_item}' quantity updated to {quantity}"}
+    
+    all_items = db.query(Order).filter(
+        Order.combined_order_id == order_id
+    ).all()
+
+    food_items = [item.food_item for item in all_items]
+
+    return {
+        "message": f"'{food_item}' quantity updated to {quantity}",
+        "combined_order_id": order_id,
+        "food_items": food_items,
+        "count": len(food_items)
+    }
 
 @router_order.post("/{order_id}/submit")
 def submit_order(order_id: str, db: Session = Depends(get_db)):
