@@ -59,7 +59,8 @@ def create_order(order: StartOrderRequest, db: Session = Depends(get_db)):
             combined_order_id=combined_order_id,
             restaurant_id=order.restaurant_id,
             food_item=item,
-            customer_id=order.customer_id
+            customer_id=order.customer_id,
+            total_cost=25.99
         )
         db.add(new_order)
     
