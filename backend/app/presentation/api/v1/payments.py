@@ -32,7 +32,7 @@ def process_payment(data: PaymentRequest, db: Session = Depends(get_db)):
         payment = Payment(order_id=data.order_id, status="success", amount=int(total_cost))
         db.add(payment)
         db.commit()
-    return build_payment_response(data.order_id, total_cost=, result)
+    return build_payment_response(data.order_id, total_cost, result)
 
 
 @router.post("/checkout", response_model=PaymentResponse)
