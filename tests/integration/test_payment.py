@@ -44,18 +44,17 @@ def setup_database():
 
 client = TestClient(app)
 
-# Verifies successful payment with valid card and amount
 def test_payment_success():
-    # Create order for payment
     order_response = client.post("/orders/create", json={
         "customer_id": 1,
         "restaurant_id": 1,
         "food_items": ["Pizza"]
     })
     combined_order_id = order_response.json()["combined_order_id"]
+    client.post(f"/checkout/orders/{combined_order_id}/place")
     response = client.post("/payments/", json={
         "order_id": combined_order_id,
-        "total_price": 25.99,
+        "total_cost": 25.99,
         "card_number": "1234567890001234"
     })
     assert response.status_code == 200
@@ -63,7 +62,6 @@ def test_payment_success():
     assert data["success"] == True
     assert data["message"] == "Payment successful"
 
-# Verifies payment fails with declined card ending in 0000
 def test_payment_declined_card():
     order_response = client.post("/orders/create", json={
         "customer_id": 1,
@@ -71,9 +69,10 @@ def test_payment_declined_card():
         "food_items": ["Pizza"]
     })
     combined_order_id = order_response.json()["combined_order_id"]
+    client.post(f"/checkout/orders/{combined_order_id}/place")
     response = client.post("/payments/", json={
         "order_id": combined_order_id,
-        "total_price": 25.99,
+        "total_cost": 25.99,
         "card_number": "1234567890000000"
     })
     assert response.status_code == 200
@@ -82,7 +81,6 @@ def test_payment_declined_card():
     assert data["message"] == "Payment failed: card declined"
 
 
-# Verifies no real payment gateway is used
 def test_payment_simulation_only():
     order_response = client.post("/orders/create", json={
         "customer_id": 1,
@@ -90,27 +88,26 @@ def test_payment_simulation_only():
         "food_items": ["Pizza"]
     })
     combined_order_id = order_response.json()["combined_order_id"]
+    client.post(f"/checkout/orders/{combined_order_id}/place")
     response = client.post("/payments/", json={
         "order_id": combined_order_id,
-        "total_price": 50.00,
+        "total_cost": 50.00,
         "card_number": "9999999999999999"
     })
     assert response.status_code == 200
     assert response.json()["success"] == True
 
-# Verifies checkout triggers simulated payment for existing order
 def test_checkout_success():
-    # first create an order
-    # Create an order using the correct endpoint and schema
     order_response = client.post("/orders/create", json={
         "customer_id": 1,
         "restaurant_id": 1,
         "food_items": ["Pizza"]
     })
     combined_order_id = order_response.json()["combined_order_id"]
+    client.post(f"/checkout/orders/{combined_order_id}/place")
     response = client.post("/payments/checkout", json={
         "order_id": combined_order_id,
-        "total_price": 25.99,
+        "total_cost": 25.99,
         "card_number": "1234567890001234"
     })
     assert response.status_code == 200
@@ -118,16 +115,14 @@ def test_checkout_success():
     assert data["success"] == True
     assert data["message"] == "Payment successful"
 
-# Verifies checkout fails for non-existent order
 def test_checkout_order_not_found():
     response = client.post("/payments/checkout", json={
         "order_id": "Str1ng",
-        "total_price": 25.99,
+        "total_cost": 25.99,
         "card_number": "1234567890001234"
     })
     assert response.status_code == 404
 
-# Verifies checkout accepts valid simulated input formats
 def test_checkout_accepts_valid_input():
     order_response = client.post("/orders/create", json={
         "customer_id": 1,
@@ -135,9 +130,10 @@ def test_checkout_accepts_valid_input():
         "food_items": ["Pizza"]
     })
     combined_order_id = order_response.json()["combined_order_id"]
+    client.post(f"/checkout/orders/{combined_order_id}/place")
     response = client.post("/payments/checkout", json={
         "order_id": combined_order_id,
-        "total_price": 50.00,
+        "total_cost": 50.00,
         "card_number": "9999999999999999"
     })
     assert response.status_code == 200

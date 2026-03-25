@@ -6,13 +6,15 @@ from app.application.services.payment_service import simulate_payment
 from app.infrastructure.database.database import get_db
 from app.infrastructure.database.models import Order, Payment
 
+
 router = APIRouter(prefix="/payments", tags=["payments"])
 
 
-def build_payment_response(order_id: str, total_price: float, result: dict) -> PaymentResponse:
+def build_payment_response(order_id: str, total_cost: float, result: dict) -> PaymentResponse:
+    """Build a payment response from order data and simulation result."""
     return PaymentResponse(
         order_id=order_id,
-        total_price=total_price,
+        total_cost=total_cost,
         success=result["success"],
         message=result["message"]
     )
@@ -21,23 +23,67 @@ def build_payment_response(order_id: str, total_price: float, result: dict) -> P
 @router.post("/", response_model=PaymentResponse)
 def process_payment(data: PaymentRequest, db: Session = Depends(get_db)):
     """Simulate payment processing using the actual combined order total from the database."""
+
+    if data.total_cost is None or data.total_cost <= 0:
+        return PaymentResponse(
+            order_id=data.order_id,
+            total_cost=data.total_cost if data.total_cost is not None else 0,
+            success=False,
+            message="Invalid payment amount"
+        )
+
     orders = db.query(Order).filter(Order.combined_order_id == data.order_id).all()
+
     if not orders:
         raise HTTPException(status_code=404, detail="Order not found")
-    total_price = sum(o.total_cost for o in orders if o.total_cost) or data.total_price
-    result = simulate_payment(data.total_price, data.card_number)
-    return build_payment_response(data.order_id, data.total_price, result)
+
+    total_cost = sum(o.total_cost for o in orders if o.total_cost)
+
+    if total_cost <= 0:
+        return PaymentResponse(
+            order_id=data.order_id,
+            total_cost=total_cost,
+            success=False,
+            message="Invalid payment amount"
+        )
+
+    result = simulate_payment(total_cost, data.card_number)
+
+    if result["success"]:
+        payment = Payment(order_id=data.order_id, status="success", amount=int(total_cost))
+        db.add(payment)
+        db.commit()
+
+    return build_payment_response(data.order_id, total_cost, result)
 
 
 @router.post("/checkout", response_model=PaymentResponse)
 def checkout(data: PaymentRequest, db: Session = Depends(get_db)):
     """Accept mock payment details and trigger simulated payment during checkout."""
     orders = db.query(Order).filter(Order.combined_order_id == data.order_id).all()
+
     if not orders:
         raise HTTPException(status_code=404, detail="Order not found")
-    total_price = sum(o.total_cost for o in orders if o.total_cost) or data.total_price
-    result = simulate_payment(data.total_price, data.card_number)
-    return build_payment_response(data.order_id, data.total_price, result)
+
+    total_cost = sum(o.total_cost for o in orders if o.total_cost)
+
+    if total_cost <= 0:
+        return PaymentResponse(
+            order_id=data.order_id,
+            total_cost=total_cost,
+            success=False,
+            message="Invalid payment amount"
+        )
+
+    result = simulate_payment(total_cost, data.card_number)
+
+    if result["success"]:
+        payment = Payment(order_id=data.order_id, status="success", amount=int(total_cost))
+        db.add(payment)
+        db.commit()
+
+    return build_payment_response(data.order_id, total_cost, result)
+
 
 @router.get("/confirmation/{order_id}")
 def get_payment_confirmation(order_id: str, db: Session = Depends(get_db)):
@@ -56,39 +102,33 @@ def get_payment_confirmation(order_id: str, db: Session = Depends(get_db)):
         "status": "Payment Successful"
     }
 
-@router.get("/failure/{order_id}")
-def get_payment_failure(order_id: str, db: Session = Depends(get_db)):
-    """Return failure message if payment was rejected for an order."""
-    payment = db.query(Payment).filter(
-        Payment.order_id == order_id,
-        Payment.status == "failed"
-    ).first()
-    if not payment:
-        raise HTTPException(status_code=404, detail="No failed payment found for this order")
-    return {
-        "message": "Payment failed",
-        "order_id": order_id,
-        "reason": "Amount must be a positive integer",
-        "status": "Payment rejected, order not placed"
-    }
-
 
 @router.post("/retry")
-def retry_payment(order_id: str, amount: int, db: Session = Depends(get_db)):
+def retry_payment(order_id: str, db: Session = Depends(get_db)):
     """Retry a payment for an order after a previous failed attempt."""
     orders = db.query(Order).filter(Order.combined_order_id == order_id).all()
+
     if not orders:
         raise HTTPException(status_code=404, detail="Order not found")
-    if amount <= 0:
-        payment = Payment(order_id=order_id, status="failed", amount=amount)
+
+    total_cost = sum(o.total_cost for o in orders if o.total_cost)
+
+    if total_cost <= 0:
+        return {
+            "message": "Invalid payment amount",
+            "order_id": order_id,
+            "payment_status": "failed"
+        }
+
+    result = simulate_payment(total_cost, "4111111111111111")
+
+    if result["success"]:
+        payment = Payment(order_id=order_id, status="success", amount=int(total_cost))
         db.add(payment)
         db.commit()
-        raise HTTPException(status_code=400, detail="Retry failed: amount must be a positive integer")
-    payment = Payment(order_id=order_id, status="success", amount=amount)
-    db.add(payment)
-    db.commit()
+
     return {
-        "message": "Retry successful",
+        "message": result["message"],
         "order_id": order_id,
-        "payment_status": "success"
+        "payment_status": "success" if result["success"] else "failed"
     }
