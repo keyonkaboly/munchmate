@@ -39,14 +39,14 @@ client = TestClient(app)
 def test_payment_confirmation_success():
     """Check that a confirmed payment returns the correct message."""
     db = TestingSessionLocal()
-    db.add(Order(order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
+    db.add(Order(combined_order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
     db.add(Payment(order_id="TEST001", status="success", amount=50))
     db.commit()
     db.close()
 
     response = client.get("/payments/confirmation/TEST001")
     assert response.status_code == 200
-    assert response.json()["status"] == "Paid / Confirmed"
+    assert response.json()["status"] == "Payment Successful"
     assert response.json()["message"] == "Payment confirmed"
 
 
@@ -59,7 +59,7 @@ def test_payment_confirmation_not_found():
 def test_payment_confirmation_failed_payment():
     """Check that a failed payment does not return confirmation."""
     db = TestingSessionLocal()
-    db.add(Order(order_id="TEST002", customer_id=1, restaurant_id=1, subtotal=50.0))
+    db.add(Order(combined_order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
     db.add(Payment(order_id="TEST002", status="failed", amount=0))
     db.commit()
     db.close()

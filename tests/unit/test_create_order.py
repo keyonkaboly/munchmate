@@ -50,8 +50,9 @@ def test_create_order_success():
     })
     assert res.status_code == 200
     data = res.json()
-    assert "combined_order_id" in data
+    assert "order_id" in data
     assert data["count"] == 2
+    assert data["food_items"] == ["Pizza", "Burger"]
 
 
 def test_create_order_empty():
@@ -70,3 +71,21 @@ def test_create_invalid_item():
         "food_items": ["Sushi"]
     })
     assert res.status_code == 404
+
+
+def test_complete_order_success():
+    res = client.post("/orders/create", json={
+        "customer_id": 1,
+        "restaurant_id": 1,
+        "food_items": ["Pizza", "Burger"]
+    })
+    assert res.status_code == 200
+
+    order_id = res.json()["order_id"]
+
+    submit_res = client.post(f"/orders/{order_id}/submit")
+    assert submit_res.status_code == 200
+
+    complete_res = client.patch(f"/orders/{order_id}/complete")
+    assert complete_res.status_code == 200
+    assert "completed" in complete_res.json()["message"].lower()

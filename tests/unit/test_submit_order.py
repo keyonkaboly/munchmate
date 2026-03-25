@@ -14,9 +14,7 @@ engine = create_engine(
     TEST_DATABASE_URL,
     connect_args={"check_same_thread": False}
 )
-
 TestingSessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
-
 
 def override_get_db():
     db = TestingSessionLocal()
@@ -26,7 +24,6 @@ def override_get_db():
         db.close()
 
 client = TestClient(app)
-
 
 @pytest.fixture(autouse=True)
 def setup_database():
@@ -49,20 +46,19 @@ def setup_database():
     Base.metadata.drop_all(bind=engine)
     app.dependency_overrides = previous_overrides
 
-
 def test_submit_valid_order():
     create_response = client.post("/orders/create", json={
         "customer_id": 1,
         "restaurant_id": 1,
         "food_items": ["Pizza"]
     })
-    combined_order_id = create_response.json()["combined_order_id"]
+    assert create_response.status_code == 200
+    order_id = create_response.json()["order_id"]
 
-    response = client.post(f"/orders/{combined_order_id}/submit")
+    response = client.post(f"/orders/{order_id}/submit")
 
     assert response.status_code == 200
     assert "submitted" in response.json()["message"].lower()
-
 
 def test_submit_invalid_order():
     response = client.post("/orders/badorder/submit")

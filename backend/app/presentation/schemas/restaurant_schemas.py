@@ -15,11 +15,5 @@ class RestaurantResponse(BaseModel):
     cuisine_type: Optional[str] = None
     model_config = {"from_attributes": True}
 
-class MenuItemUpdate(BaseModel):
-    description: Optional[str] = None
-    category: Optional[str] = None
-    is_available: Optional[bool] = None
-
-
 class MenuItemNameUpdate(BaseModel):
     food_item: str = Field(min_length=1)

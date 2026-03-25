@@ -46,9 +46,16 @@ client = TestClient(app)
 
 """Verifies successful payment with valid card and amount"""
 def test_payment_success():
+    order_response = client.post("/orders/create", json={
+        "customer_id": 1,
+        "restaurant_id": 1,
+        "food_items": ["Pizza"]
+    })
+    combined_order_id = order_response.json()["combined_order_id"]
+    client.post(f"/checkout/orders/{combined_order_id}/place")
     response = client.post("/payments/", json={
-        "order_id": "Str1ng",
-        "total_price": 25.99,
+        "order_id": combined_order_id,
+        "total_cost": 25.99,
         "card_number": "1234567890001234"
     })
     assert response.status_code == 200
@@ -56,11 +63,21 @@ def test_payment_success():
     assert data["success"] == True
     assert data["message"] == "Payment successful"
 
+<<<<<<< HEAD
 """Verifies payment fails with declined card ending in 0000"""
+=======
+>>>>>>> 55c3b99f804981ab1015101e5ab911496dacac3c
 def test_payment_declined_card():
+    order_response = client.post("/orders/create", json={
+        "customer_id": 1,
+        "restaurant_id": 1,
+        "food_items": ["Pizza"]
+    })
+    combined_order_id = order_response.json()["combined_order_id"]
+    client.post(f"/checkout/orders/{combined_order_id}/place")
     response = client.post("/payments/", json={
-        "order_id": "Str1ng",
-        "total_price": 25.99,
+        "order_id": combined_order_id,
+        "total_cost": 25.99,
         "card_number": "1234567890000000"
     })
     assert response.status_code == 200
@@ -68,6 +85,7 @@ def test_payment_declined_card():
     assert data["success"] == False
     assert data["message"] == "Payment failed: card declined"
 
+<<<<<<< HEAD
 """Verifies payment fails with invalid order amount"""
 def test_payment_invalid_amount():
     response = client.post("/payments/", json={
@@ -81,31 +99,40 @@ def test_payment_invalid_amount():
     assert data["message"] == "Payment failed: invalid order amount"
 
 """Verifies no real payment gateway is used"""
+=======
+
+>>>>>>> 55c3b99f804981ab1015101e5ab911496dacac3c
 def test_payment_simulation_only():
+    order_response = client.post("/orders/create", json={
+        "customer_id": 1,
+        "restaurant_id": 1,
+        "food_items": ["Pizza"]
+    })
+    combined_order_id = order_response.json()["combined_order_id"]
+    client.post(f"/checkout/orders/{combined_order_id}/place")
     response = client.post("/payments/", json={
-        "order_id": "Str1ng",
-        "total_price": 50.00,
+        "order_id": combined_order_id,
+        "total_cost": 50.00,
         "card_number": "9999999999999999"
     })
     assert response.status_code == 200
     assert response.json()["success"] == True
 
+<<<<<<< HEAD
 """Verifies checkout triggers simulated payment for existing order"""
+=======
+>>>>>>> 55c3b99f804981ab1015101e5ab911496dacac3c
 def test_checkout_success():
-    # first create an order
-    order_response = client.post("/orders/", json={
-        "order_id": "Str1ng",
+    order_response = client.post("/orders/create", json={
+        "customer_id": 1,
         "restaurant_id": 1,
-        "delivery_method": "Bike",
-        "delivery_distance": 2.5,
-        "route_taken": "Route_1",
-        "route_type": "Bike-friendly",
-        "route_efficiency": 0.85
+        "food_items": ["Pizza"]
     })
-    order_id = order_response.json()["order_id"]
+    combined_order_id = order_response.json()["combined_order_id"]
+    client.post(f"/checkout/orders/{combined_order_id}/place")
     response = client.post("/payments/checkout", json={
-        "order_id": order_id,
-        "total_price": 25.99,
+        "order_id": combined_order_id,
+        "total_cost": 25.99,
         "card_number": "1234567890001234"
     })
     assert response.status_code == 200
@@ -113,30 +140,33 @@ def test_checkout_success():
     assert data["success"] == True
     assert data["message"] == "Payment successful"
 
+<<<<<<< HEAD
 """Verifies checkout fails for non-existent order"""
+=======
+>>>>>>> 55c3b99f804981ab1015101e5ab911496dacac3c
 def test_checkout_order_not_found():
     response = client.post("/payments/checkout", json={
         "order_id": "Str1ng",
-        "total_price": 25.99,
+        "total_cost": 25.99,
         "card_number": "1234567890001234"
     })
     assert response.status_code == 404
 
+<<<<<<< HEAD
 """Verifies checkout accepts valid simulated input formats"""
+=======
+>>>>>>> 55c3b99f804981ab1015101e5ab911496dacac3c
 def test_checkout_accepts_valid_input():
-    order_response = client.post("/orders/", json={
-        "order_id": "Str1ng",
+    order_response = client.post("/orders/create", json={
+        "customer_id": 1,
         "restaurant_id": 1,
-        "delivery_method": "Car",
-        "delivery_distance": 3.0,
-        "route_taken": "Route_2",
-        "route_type": "Car-only",
-        "route_efficiency": 0.75
+        "food_items": ["Pizza"]
     })
-    order_id = order_response.json()["order_id"]
+    combined_order_id = order_response.json()["combined_order_id"]
+    client.post(f"/checkout/orders/{combined_order_id}/place")
     response = client.post("/payments/checkout", json={
-        "order_id": order_id,
-        "total_price": 50.00,
+        "order_id": combined_order_id,
+        "total_cost": 50.00,
         "card_number": "9999999999999999"
     })
     assert response.status_code == 200
