@@ -50,7 +50,7 @@ def test_delivery_status_notification_success():
 
 def test_delivery_status_notification_order_not_found():
     """Check that a notification for a non-existent order returns 404."""
-    response = client.post("/notifications/delivery-status?order_id=FAKE999&customer_id=1&status=On the way")
+    response = client.post("/notifications/delivery-status?order_id=FAKE999&customer_id=1")
     assert response.status_code == 404
 
 
@@ -61,7 +61,7 @@ def test_delivery_status_notification_correct_customer():
     db.commit()
     db.close()
 
-    response = client.post("/notifications/delivery-status?order_id=TEST001&customer_id=1&status=On the way")
+    response = client.post("/notifications/delivery-status?order_id=TEST001&customer_id=1")
     assert response.status_code == 200
     assert response.json()["customer_id"] == 1
 
@@ -72,7 +72,6 @@ def test_delivery_status_notification_status_updated():
     db.add(Order(combined_order_id="TEST001", customer_id=1, restaurant_id=1, subtotal=50.0))
     db.commit()
     db.close()
-
-    response = client.post("/notifications/delivery-status?order_id=TEST001&customer_id=1&status=On the way")
+    response = client.post("/notifications/delivery-status?order_id=TEST001&customer_id=1")
     assert response.status_code == 200
-    assert response.json()["status"] == "On the way"
+    assert response.json()["status"] == "Created"
