@@ -295,6 +295,10 @@ def complete_order(order_id: str, db: Session = Depends(get_db)):
         item.route_taken = delivery_info["route_taken"]
         item.route_type = delivery_info["route_type"]
         item.route_efficiency = delivery_info["route_efficiency"]
+        item.delivery_time = str(estimated_time)
+        item.delivery_time_actual = actual_time
+        estimated_time = round(item.delivery_distance * 5 + item.delivery_delay, 2)
+        actual_time = round(estimated_time + random.uniform(-2, 3), 2)
 
     db.commit()
     return {"message": f"Order {order_id} completed", "delivery_info": delivery_info}
