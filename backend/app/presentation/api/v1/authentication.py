@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.infrastructure.security.hashing import hash_password, verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 from app.infrastructure.database.database import get_db
-from app.infrastructure.database.models import Customer
+from app.infrastructure.database.models import Customer, Order, Payment, Notification
 from app.presentation.schemas.user_schemas import UserCreate, UserLogin, UserUpdate
 from datetime import timedelta
 
@@ -135,3 +135,30 @@ def update_me(
         "user_type": current_user.user_type,
         "message": "Account updated successfully"
     }
+    
+@router_auth.delete("/me")
+def delete_me(
+    response: Response,
+    db: Session = Depends(get_db),
+    current_user: Customer = Depends(get_current_user)
+):
+    user_orders = db.query(Order).filter(Order.customer_id == current_user.id).all()
+    order_ids = set()
+    for order in user_orders:
+        if order.order_id:
+            order_ids.add(order.order_id)
+        if order.combined_order_id:
+            order_ids.add(order.combined_order_id)
+
+    if order_ids:
+        db.query(Payment).filter(Payment.order_id.in_(list(order_ids))).delete(synchronize_session=False)
+        db.query(Notification).filter(Notification.order_id.in_(list(order_ids))).delete(synchronize_session=False)
+
+    db.query(Notification).filter(Notification.customer_id == current_user.id).delete(synchronize_session=False)
+    db.query(Order).filter(Order.customer_id == current_user.id).delete(synchronize_session=False)
+
+    db.delete(current_user)
+    db.commit()
+
+    response.delete_cookie(key="access_token", path="/")
+    return {"message": "Account and all related data deleted successfully"}
