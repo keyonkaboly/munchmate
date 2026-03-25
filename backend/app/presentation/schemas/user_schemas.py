@@ -2,7 +2,7 @@ from pydantic import BaseModel,EmailStr, Field, ConfigDict
 from typing import Literal
     
 class UserBase(BaseModel):
-    username: str = Field(min_length=6, max_length=12) #username must be between 6 to 12 characters
+    username: str = Field(min_length=6, max_length=12)
     email: EmailStr
     
 class UserCreate(UserBase):

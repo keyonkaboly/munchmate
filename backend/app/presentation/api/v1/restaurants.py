@@ -85,7 +85,7 @@ def get_menu_item(restaurant_id: int, food_item: str, db: Session = Depends(get_
 
     item = db.query(MenuItem).filter(
         MenuItem.restaurant_id == restaurant_id,
-        MenuItem.food_item == food_item  # Match by exact name
+        MenuItem.food_item == food_item
     ).first()
 
     if not item:

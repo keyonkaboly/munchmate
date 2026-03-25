@@ -63,10 +63,7 @@ def test_payment_success():
     assert data["success"] == True
     assert data["message"] == "Payment successful"
 
-<<<<<<< HEAD
 """Verifies payment fails with declined card ending in 0000"""
-=======
->>>>>>> 55c3b99f804981ab1015101e5ab911496dacac3c
 def test_payment_declined_card():
     order_response = client.post("/orders/create", json={
         "customer_id": 1,
@@ -85,23 +82,6 @@ def test_payment_declined_card():
     assert data["success"] == False
     assert data["message"] == "Payment failed: card declined"
 
-<<<<<<< HEAD
-"""Verifies payment fails with invalid order amount"""
-def test_payment_invalid_amount():
-    response = client.post("/payments/", json={
-        "order_id": "Str1ng",
-        "total_price": 0,
-        "card_number": "1234567890001234"
-    })
-    assert response.status_code == 200
-    data = response.json()
-    assert data["success"] == False
-    assert data["message"] == "Payment failed: invalid order amount"
-
-"""Verifies no real payment gateway is used"""
-=======
-
->>>>>>> 55c3b99f804981ab1015101e5ab911496dacac3c
 def test_payment_simulation_only():
     order_response = client.post("/orders/create", json={
         "customer_id": 1,
@@ -118,10 +98,7 @@ def test_payment_simulation_only():
     assert response.status_code == 200
     assert response.json()["success"] == True
 
-<<<<<<< HEAD
 """Verifies checkout triggers simulated payment for existing order"""
-=======
->>>>>>> 55c3b99f804981ab1015101e5ab911496dacac3c
 def test_checkout_success():
     order_response = client.post("/orders/create", json={
         "customer_id": 1,
@@ -140,10 +117,7 @@ def test_checkout_success():
     assert data["success"] == True
     assert data["message"] == "Payment successful"
 
-<<<<<<< HEAD
 """Verifies checkout fails for non-existent order"""
-=======
->>>>>>> 55c3b99f804981ab1015101e5ab911496dacac3c
 def test_checkout_order_not_found():
     response = client.post("/payments/checkout", json={
         "order_id": "Str1ng",
@@ -152,10 +126,7 @@ def test_checkout_order_not_found():
     })
     assert response.status_code == 404
 
-<<<<<<< HEAD
 """Verifies checkout accepts valid simulated input formats"""
-=======
->>>>>>> 55c3b99f804981ab1015101e5ab911496dacac3c
 def test_checkout_accepts_valid_input():
     order_response = client.post("/orders/create", json={
         "customer_id": 1,

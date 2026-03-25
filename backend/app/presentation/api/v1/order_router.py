@@ -9,8 +9,6 @@ from app.presentation.schemas.delivery_schemas import OrderCreate, OrderResponse
 
 router_order = APIRouter(prefix="/orders", tags=["orders"])
 
-<<<<<<< HEAD
-=======
 DELIVERY_METHOD_RANK = {"Walk": 1, "Bike": 2, "Car": 3}
 ROUTE_TYPE_RANK = {"Bike-friendly": 1, "Mixed": 2, "Car-only": 3}
 
@@ -64,8 +62,6 @@ def get_most_restrictive_delivery(restaurant_id: int, food_items: list, db: Sess
     }
 
 
-# helper func
->>>>>>> 55c3b99f804981ab1015101e5ab911496dacac3c
 def get_order_or_404(combined_order_id: str, db: Session) -> Order:
     order = db.query(Order).filter(Order.combined_order_id == combined_order_id).first()
     if not order:
@@ -79,13 +75,7 @@ def get_order_items_or_404(combined_order_id: str, db: Session):
         raise HTTPException(status_code=404, detail="Order not found")
     return items
 
-<<<<<<< HEAD
-"""prevents any modification once order is completed"""
-def ensure_order_not_completed(combined_order_id: str, db: Session):
-=======
-#prevents any modification once order is completed
 def ensure_order_editable(combined_order_id: str, db: Session):
->>>>>>> 55c3b99f804981ab1015101e5ab911496dacac3c
     items = get_order_items_or_404(combined_order_id, db)
     if items[0].status != "Created":
         raise HTTPException(
@@ -106,7 +96,6 @@ def validate_menu_item(restaurant_id: int, food_item: str, db: Session):
             detail=f"'{food_item}' does not exist on this restaurant's menu"
         )
 
-# order validation
 def validate_order(combined_order_id: str, db: Session):
     items = get_order_items_or_404(combined_order_id, db)
 
@@ -256,12 +245,7 @@ def update_item_quantity(order_id: str, food_item: str, quantity: int, db: Sessi
         Order.combined_order_id == order_id
     ).all()
 
-<<<<<<< HEAD
-def validate_order(order_id: str, db: Session):
-    items = db.query(Order).filter(Order.combined_order_id == order_id).all()
-=======
     food_items = [item.food_item for item in all_items]
->>>>>>> 55c3b99f804981ab1015101e5ab911496dacac3c
 
     return {
         "message": f"'{food_item}' quantity updated to {quantity}",

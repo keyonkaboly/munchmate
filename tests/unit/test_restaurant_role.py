@@ -30,14 +30,12 @@ def override_current_user(user):
 
 """setup test data"""
 def create_test_data(db: Session):
-    #create restaurants
     r1 = Restaurant(id=1, location="Test1", food_item="Pizza")
     r2 = Restaurant(id=2, location="Test2", food_item="Burger")
 
     db.add_all([r1, r2])
     db.commit()
 
-    #create orders
     order1 = Order(order_id="o1", restaurant_id=1)
     order2 = Order(order_id="o2", restaurant_id=1)
     order3 = Order(order_id="o3", restaurant_id=2)
