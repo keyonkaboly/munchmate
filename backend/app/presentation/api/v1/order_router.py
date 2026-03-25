@@ -1,4 +1,6 @@
+import random
 from fastapi import APIRouter, Depends, HTTPException
+from munchmate.app import db
 from sqlalchemy.orm import Session
 from app.infrastructure.database.database import get_db
 from app.infrastructure.database.models import Order, MenuItem
@@ -14,8 +16,7 @@ ROUTE_TYPE_RANK = {"Bike-friendly": 1, "Mixed": 2, "Car-only": 3}
 def get_most_restrictive_delivery(restaurant_id: int, food_items: list, db: Session) -> dict:
     matching_rows = db.query(Order).filter(
         Order.restaurant_id == restaurant_id,
-        Order.food_item.in_(food_items),
-        Order.status == "Created"
+        Order.food_item.in_(food_items)
     ).all()
 
     if not matching_rows:
@@ -117,9 +118,15 @@ def create_order(order: StartOrderRequest, db: Session = Depends(get_db)):
    if not order.food_items:
        raise HTTPException(status_code=400, detail="Order must contain at least one item")
    
-   # this validate that items exist on the restaurant menu
    for item in order.food_items:
-       validate_menu_item(order.restaurant_id, item, db)    
+       validate_menu_item(order.restaurant_id, item, db)
+
+   delivery_method = random.choice(["Walk", "Bike", "Car"])
+   delivery_distance = round(random.uniform(1, 8), 2)
+   delivery_delay = random.randint(0, 10)
+   route_taken = random.choice(["Main Street", "Broadway", "4th Ave"])
+   route_type = random.choice(["Bike-friendly", "Mixed", "Car-only"])
+   route_efficiency = round(random.uniform(0.7, 0.95), 2)
 
    for item in order.food_items:
         new_order = Order(
@@ -127,7 +134,13 @@ def create_order(order: StartOrderRequest, db: Session = Depends(get_db)):
             restaurant_id=order.restaurant_id,
             food_item=item,
             customer_id=order.customer_id,
-            status="Created"
+            status="Created",
+            delivery_method=delivery_method,
+            delivery_distance=delivery_distance,
+            delivery_delay=delivery_delay,
+            route_taken=route_taken,
+            route_type=route_type,
+            route_efficiency=route_efficiency
         )
         db.add(new_order)
     
@@ -259,6 +272,7 @@ def submit_order(order_id: str, db: Session = Depends(get_db)):
         item.status = "Submitted"
 
     db.commit()
+
     return {"message": f"Order {order_id} submitted successfully"}
 
 @router_order.patch("/{order_id}/complete")
