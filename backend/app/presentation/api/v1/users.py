@@ -18,7 +18,7 @@ def create_user(
     new_user = Customer(
         email=user.email,
         username=user.username,
-        password_hash=hash_password(user.password), #this temporary for now 
+        password_hash=hash_password(user.password), 
     )
     
     db.add(new_user) 
@@ -28,7 +28,7 @@ def create_user(
         db.refresh(new_user) 
     except IntegrityError: 
         db.rollback() 
-        raise HTTPException(status_code=400, detail="Email or username already exists") #400=bad request
+        raise HTTPException(status_code=400, detail="Email or username already exists") 
     
     
     return new_user
