@@ -13,8 +13,6 @@ Then run following below commands Keep in mind that you should navigate to local
 - docker compose ps
 - curl http://localhost:8000/
 - docker compose exec backend bash
-- PYTHONPATH=. python3 app/infrastructure/database/create_tables.py
-- PYTHONPATH=. python3 app/data/dataset_seed.py
 
 - Then go to localhost:8000/docs, now everything will be seeded and ready.
 
