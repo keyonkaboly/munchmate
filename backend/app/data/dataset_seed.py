@@ -2,10 +2,7 @@ from app.data.dataset_loader import load_dataset
 from app.infrastructure.database.database import SessionLocal
 from app.infrastructure.database.models import Restaurant, MenuItem, Order
 
-
-def seed_restaurants(result, db_session):
-    """Seed unique restaurants from the dataset into the database."""
-    CUISINE_MAP = {
+CUISINE_MAP = {
     "Pizza": "Italian", "Pasta": "Italian",
     "Sushi": "Asian", "Briyani rice": "Asian", "Chicken rice": "Asian", "Dumplings": "Asian",
     "Burritos": "Mexican", "Taccos": "Mexican",
@@ -15,21 +12,22 @@ def seed_restaurants(result, db_session):
     "CoffeeBoba tea": "Desserts & Drinks", "PastrySmoothie": "Desserts & Drinks",
     "Beef pie": "Other", "Chicken pie": "Other"
 }
-    
+
+VEGETARIAN_ITEMS = {"Salad", "Soup", "Whole cake", "Cookie", "Cup cake", "PastrySmoothie"}
+HALAL_ITEMS = {"Briyani rice", "Chicken rice", "Shawarma", "Dumplings", "Sushi"}
+
+def seed_restaurants(result, db_session):
+    """Seed unique restaurants from the dataset into the database."""
     unique_restaurants = result[['restaurant_id', 'food_item', 'location']].drop_duplicates(subset=['restaurant_id'])
     restaurant_count = 0
-
-    from app.utils.filters import apply_dietary_filters
-    vegetarian_items = {"Salad", "Soup", "Whole cake", "Cookie", "Cup cake", "PastrySmoothie"}
-    halal_items = {"Briyani rice", "Chicken rice", "Shawarma", "Dumplings", "Sushi"}
 
     for index, row in unique_restaurants.iterrows():
         restaurant_id = int(row['restaurant_id'])
         cuisine = CUISINE_MAP.get(row['food_item'], "Other")
         location = str(row['location'])
         food_item = str(row['food_item'])
-        is_vegetarian = food_item in vegetarian_items
-        is_halal = food_item in halal_items or is_vegetarian
+        is_vegetarian = food_item in VEGETARIAN_ITEMS
+        is_halal = food_item in HALAL_ITEMS or is_vegetarian
 
         exist = db_session.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
 
@@ -56,8 +54,9 @@ def seed_menu_items(result, db_session):
         restaurant_id = int(row['restaurant_id'])
         food_item = str(row['food_item'])
         price = float(row['order_value'])
-        is_halal = False
-        is_vegetarian = False
+        cuisine_type = CUISINE_MAP.get(food_item, "Other")
+        is_vegetarian = food_item in VEGETARIAN_ITEMS
+        is_halal = food_item in HALAL_ITEMS or is_vegetarian
 
         exist = db_session.query(MenuItem).filter(
             MenuItem.restaurant_id == restaurant_id,
