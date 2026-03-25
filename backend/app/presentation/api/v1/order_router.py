@@ -1,6 +1,5 @@
 import random
 from fastapi import APIRouter, Depends, HTTPException
-from munchmate.app import db
 from sqlalchemy.orm import Session
 from app.infrastructure.database.database import get_db
 from app.infrastructure.database.models import Order, MenuItem
