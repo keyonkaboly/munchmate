@@ -1,11 +1,5 @@
 name: Pytest Tests
 
-# Ubuntu is optimal for tests
-# checkout@v4 pulls repo
-# installs python 3.12
-# installs dependencies incl. in our repo
-# verbose and short error msgs
-
 on:
   pull_request:
   push:

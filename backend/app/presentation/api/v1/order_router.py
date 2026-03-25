@@ -62,21 +62,19 @@ def get_most_restrictive_delivery(restaurant_id: int, food_items: list, db: Sess
     }
 
 
-# helper func
 def get_order_or_404(combined_order_id: str, db: Session) -> Order:
     order = db.query(Order).filter(Order.combined_order_id == combined_order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     return order
 
-#helper func - returns all rows/items for one grouped order
+"""helper func - returns all rows/items for one grouped order"""
 def get_order_items_or_404(combined_order_id: str, db: Session):
     items = db.query(Order).filter(Order.combined_order_id == combined_order_id).all()
     if not items:
         raise HTTPException(status_code=404, detail="Order not found")
     return items
 
-#prevents any modification once order is completed
 def ensure_order_editable(combined_order_id: str, db: Session):
     items = get_order_items_or_404(combined_order_id, db)
     if items[0].status != "Created":
@@ -86,7 +84,7 @@ def ensure_order_editable(combined_order_id: str, db: Session):
         )
     return items
 
-# shared validation
+
 def validate_menu_item(restaurant_id: int, food_item: str, db: Session):
     exists = db.query(MenuItem).filter(
         MenuItem.restaurant_id == restaurant_id,
@@ -98,7 +96,6 @@ def validate_menu_item(restaurant_id: int, food_item: str, db: Session):
             detail=f"'{food_item}' does not exist on this restaurant's menu"
         )
 
-# order validation
 def validate_order(combined_order_id: str, db: Session):
     items = get_order_items_or_404(combined_order_id, db)
 
@@ -213,11 +210,9 @@ def remove_item(order_id: str, food_item: str, db: Session = Depends(get_db)):
 def update_item_quantity(order_id: str, food_item: str, quantity: int, db: Session = Depends(get_db)):
     ensure_order_editable(order_id, db)
     
-    #this validates that the quanity is positive
     if quantity < 0:
         raise HTTPException(status_code=422, detail="Quantity cannot be negative")
     
-    #get all rows for this item in the order
     items = db.query(Order).filter(
         Order.combined_order_id == order_id,
         Order.food_item == food_item

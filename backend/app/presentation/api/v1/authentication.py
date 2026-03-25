@@ -107,21 +107,18 @@ def update_me(
     db: Session = Depends(get_db),
     current_user: Customer = Depends(get_current_user)
 ):
-    #check username conflict
     if user_update.username and user_update.username != current_user.username:
         existing_username = db.query(Customer).filter(Customer.username == user_update.username).first()
         if existing_username:
             raise HTTPException(status_code=400, detail="Username already exists")
         current_user.username = user_update.username
 
-    #check email conflict
     if user_update.email and user_update.email != current_user.email:
         existing_email = db.query(Customer).filter(Customer.email == user_update.email).first()
         if existing_email:
             raise HTTPException(status_code=400, detail="Email already exists")
         current_user.email = user_update.email
 
-    #update password
     if user_update.password:
         current_user.password_hash = hash_password(user_update.password)
 
