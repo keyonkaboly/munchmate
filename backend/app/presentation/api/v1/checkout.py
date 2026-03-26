@@ -28,13 +28,14 @@ def checkout_calculate(data: CheckoutRequest, db: Session = Depends(get_db)):
 @router.post("/orders/{order_id}/place", response_model = CheckoutResponse)
 def place_order(order_id: str, db: Session = Depends(get_db)):
     combined_items = db.query(Order).filter(Order.combined_order_id == order_id).all()
+
     if combined_items:
         final_total = calculate_combined_order_total(db, order_id)
-        for item in combined_items:
+        for idx, item in enumerate(combined_items):
             item.subtotal = final_total["subtotal"]
             item.tax = final_total["tax"]
             item.delivery_cost = final_total["delivery_cost"]
-            item.total_cost = final_total["total_cost"]
+            item.total_cost = final_total["total_cost"] if idx == 0 else 0.0
         db.commit()
 
         return {"order_id": order_id, "subtotal": final_total["subtotal"], "tax": final_total["tax"], "delivery_cost": final_total["delivery_cost"], "total_cost": final_total["total_cost"]}

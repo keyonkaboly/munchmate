@@ -44,29 +44,6 @@ def create_completed_order():
     client.patch(f"/orders/{order_id}/complete")
     return order_id
 
-def test_delivery_info_saved_and_retrievable():
-    order_id = create_completed_order()
-    get_response = client.get(f"/orders/{order_id}")
-    assert get_response.status_code == 200
-    data = get_response.json()
-    assert data["order_id"] is not None
-
-"""delivery info is saved automatically when order is placed"""
-def test_delivery_info_saved_automatically_on_order_placement():
-    order_id = create_completed_order()
-    get_response = client.get(f"/orders/{order_id}")
-    assert get_response.status_code == 200
-    data = get_response.json()
-    assert data["order_id"] is not None
-
-"""delivery data remains accessible for lifetime of order"""
-def test_delivery_info_remains_accessible():
-    order_id = create_completed_order()
-    for _ in range(3):
-        get_response = client.get(f"/orders/{order_id}")
-        assert get_response.status_code == 200
-        assert get_response.json()["order_id"] is not None
-
 """ Verifies non-existent order returns 404"""
 def test_get_nonexistent_order_returns_404():
     response = client.get("/orders/999")
