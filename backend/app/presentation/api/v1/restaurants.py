@@ -137,27 +137,3 @@ def require_restaurant_manager(current_user: Customer = Depends(get_current_user
             detail="Only restaurant managers can access this feature"
         )
     return current_user
-
-"""this func so only restaurant manager can access"""
-@router.get("/{restaurant_id}/orders")
-def get_restaurant_orders(
-    restaurant_id: int,
-    current_user: Customer = Depends(require_restaurant_manager),
-    db: Session = Depends(get_db)
-):
-    if current_user.restaurant_manager_restaurant_id != restaurant_id:
-        raise HTTPException(
-            status_code=403,
-            detail="You can only access orders for your own restaurant"
-        )
-
-    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
-    if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant ID not found")
-
-    orders = db.query(Order).filter(Order.restaurant_id == restaurant_id).all()
-
-    return {
-        "restaurant_id": restaurant_id,
-        "orders": orders
-    }
