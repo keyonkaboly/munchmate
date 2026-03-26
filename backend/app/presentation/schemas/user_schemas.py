@@ -1,5 +1,6 @@
 from pydantic import BaseModel,EmailStr, Field, ConfigDict
 from typing import Literal
+from typing import Optional
     
 class UserBase(BaseModel):
     username: str = Field(min_length=6, max_length=12)
@@ -27,10 +28,6 @@ class Token(BaseModel):
     access_token: str
     token_type: str
     
-    
-from typing import Optional
-from pydantic import BaseModel, EmailStr, Field
-
 class UserUpdate(BaseModel):
     username: Optional[str] = Field(default=None, min_length=6, max_length=12)
     email: Optional[EmailStr] = None
