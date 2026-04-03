@@ -10,7 +10,12 @@ class OrderCreate(BaseModel):
 class StartOrderRequest(BaseModel):
     customer_id: int
     restaurant_id: int
-    food_items: List[str] = Field(default=[])   
+    food_items: List[str] = Field(default=[])
 
-    
+
+class EarlyCancelRefundResponse(BaseModel):
+    message: str
+    order_id: str
+    refund_amount: float
+
     
