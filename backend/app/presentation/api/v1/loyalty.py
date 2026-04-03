@@ -18,7 +18,7 @@ def get_loyalty(customer_id: int, db: Session = Depends(get_db)):
 
 @router.post("/apply", response_model=LoyaltyApplyResponse)
 def apply_loyalty_reward(data: LoyaltyApplyRequest, db: Session = Depends(get_db)):
-    result = apply_reward_to_order(db, data.customer_id, data.order_id)
+    result = apply_reward_to_order(db, data.customer_id, data.combined_order_id)
     if result is None:
         raise HTTPException(status_code=404, detail="Customer not found")
     return result

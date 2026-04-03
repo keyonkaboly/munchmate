@@ -5,26 +5,26 @@ MILESTONE_DOLLARS = 500.0
 MILESTONE_REWARD_PERCENT = 50
 
 
-def award_loyalty_for_order(db: Session, order_id: str) -> dict:
+def award_loyalty_for_order(db: Session, order_id: str) -> dict | None:
     existing = db.query(Payment).filter(Payment.order_id == order_id).first()
     if existing:
-        return {"awarded": False, "reason": "already_awarded"}
+        return None
 
     orders = db.query(Order).filter(Order.combined_order_id == order_id).all()
     if not orders:
-        return {"awarded": False, "reason": "order_not_found"}
+        return None
 
     customer_id = orders[0].customer_id
     if customer_id is None:
-        return {"awarded": False, "reason": "customer_missing"}
+        return None
 
     customer = db.query(Customer).filter(Customer.id == customer_id).first()
     if not customer:
-        return {"awarded": False, "reason": "customer_not_found"}
+        return None
 
     order_total = round(sum(item.total_cost for item in orders if item.total_cost), 2)
     if order_total <= 0:
-        return {"awarded": False, "reason": "non_positive_total"}
+        return None
 
     points_awarded = int(order_total)
 
@@ -38,8 +38,6 @@ def award_loyalty_for_order(db: Session, order_id: str) -> dict:
 
     db.commit()
     db.refresh(customer)
-
-    return {"awarded": True, "reason": "ok"}
 
 
 def get_loyalty_summary(db: Session, customer_id: int) -> dict | None:
@@ -77,4 +75,4 @@ def apply_reward_to_order(db: Session, customer_id: int, order_id: str) -> dict 
     db.commit()
     db.refresh(customer)
 
-    return {"applied": True, "reason": "ok", "order_id": order_id, "order_total": order_total, "discount_percent": MILESTONE_REWARD_PERCENT, "discount_amount": discount, "discounted_total": discounted_total}
+    return {"combined_order_id": order_id, "order_total": order_total, "discount_percent": MILESTONE_REWARD_PERCENT, "discount_amount": discount, "discounted_total": discounted_total}

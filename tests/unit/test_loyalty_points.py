@@ -35,9 +35,6 @@ def test_award_loyalty_earns_points():
     db.commit()
     
     result = award_loyalty_for_order(db, "some-Uuid1")
-    assert result["awarded"] is True
-    
-    db.refresh(db.query(Customer).filter(Customer.id == 1).first())
     customer = db.query(Customer).filter(Customer.id == 1).first()
     assert customer.loyalty_points == 50
     db.close()
@@ -60,7 +57,6 @@ def test_apply_reward_gives_50_percent_discount():
     db.commit()
     
     result = apply_reward_to_order(db, 3, "some-Uuid3")
-    assert result["applied"] is True
     assert result["discount_amount"] == 40.0
     assert result["discounted_total"] == 40.0
     db.close()
@@ -75,8 +71,7 @@ def test_double_payment_no_double_award():
     db.add(Payment(order_id="some-Uuid4", status="success", amount=100))
     db.commit()
     result = award_loyalty_for_order(db, "some-Uuid4")
-    assert result["awarded"] is False
-    assert result["reason"] == "already_awarded"
+    assert result is None
     db.close()
 
 def test_get_loyalty_summary():
@@ -87,4 +82,15 @@ def test_get_loyalty_summary():
     summary = get_loyalty_summary(db, 5)
     assert summary["points"] == 250
     assert summary["reward_percent"] == 50
+    db.close()
+
+def test_500_points_unlocks_one_reward():
+    db = TestingSessionLocal()
+    db.add(Customer(id=6, username="username6", email="user6@gmail.com", password_hash="P@ssword"))
+    db.add(Order(combined_order_id="some-Uuid6", customer_id=6, restaurant_id=1, total_cost=500.0))
+    db.commit()
+
+    award_loyalty_for_order(db, "some-Uuid6")
+    customer = db.query(Customer).filter(Customer.id == 6).first()
+    assert customer.loyalty_rewards_available == 1
     db.close()
