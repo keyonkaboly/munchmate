@@ -2,8 +2,8 @@ import random
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.infrastructure.database.database import get_db
-from app.infrastructure.database.models import Order, MenuItem
-from app.presentation.schemas.order_schema import StartOrderRequest
+from app.infrastructure.database.models import Order, MenuItem, Payment
+from app.presentation.schemas.order_schema import StartOrderRequest, EarlyCancelRefundResponse
 import uuid
 from app.presentation.schemas.delivery_schemas import OrderCreate, OrderResponse
 
@@ -315,6 +315,43 @@ def cancel_order(order_id: str, db: Session = Depends(get_db)):
 
     db.commit()
     return {"message": f"Order {order_id} canceled"}
+
+
+@router_order.post("/{order_id}/cancel-with-refund", response_model=EarlyCancelRefundResponse)
+def cancel_order_with_refund(order_id: str, db: Session = Depends(get_db)):
+    """50% refund if the order is still early (not completed) and was paid successfully."""
+    items = get_order_items_or_404(order_id, db)
+    status = items[0].status
+
+    if status not in ("Created", "Submitted"):
+        raise HTTPException(
+            status_code=400,
+            detail="Order is too far along to cancel with a refund",
+        )
+
+    payment = db.query(Payment).filter(
+        Payment.order_id == order_id,
+        Payment.status == "success",
+    ).first()
+    if not payment:
+        raise HTTPException(
+            status_code=400,
+            detail="No successful payment on file; cancellation with refund is not available",
+        )
+
+    refund_amount = round(float(payment.amount) * 0.5, 2)
+
+    for item in items:
+        item.status = "Canceled"
+
+    db.commit()
+
+    return EarlyCancelRefundResponse(
+        message=f"Order {order_id} canceled; refund amount (50% of payment)",
+        order_id=order_id,
+        refund_amount=refund_amount,
+    )
+
 
 @router_order.get("/customer/{customer_id}")
 def get_customer_orders(customer_id: str, db: Session = Depends(get_db)):
