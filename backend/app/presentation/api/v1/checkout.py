@@ -11,6 +11,17 @@ router = APIRouter(prefix="/checkout", tags=["checkout"])
 """Calls calculate method from pricing service and returns checkout totals for order (recalculation endpoint)"""
 @router.post("/calculate", response_model = CheckoutResponse)
 def checkout_calculate(data: CheckoutRequest, db: Session = Depends(get_db)):
+    existing_items = db.query(Order).filter(Order.combined_order_id == data.order_id).all()
+    if existing_items:
+        persisted = None
+        for item in existing_items:
+            if item.total_cost and item.total_cost > 0:
+                persisted = item
+                break
+
+        if persisted:
+            return {"order_id": data.order_id, "subtotal": persisted.subtotal, "tax": persisted.tax, "delivery_cost": persisted.delivery_cost, "total_cost": persisted.total_cost}
+
     combined_total = calculate_combined_order_total(db, data.order_id)
     if combined_total is not None:
         return {"order_id": data.order_id, "subtotal": combined_total["subtotal"], "tax": combined_total["tax"], "delivery_cost": combined_total["delivery_cost"], "total_cost": combined_total["total_cost"]}
@@ -19,6 +30,9 @@ def checkout_calculate(data: CheckoutRequest, db: Session = Depends(get_db)):
 
     if order is None:
         raise HTTPException(status_code=404, detail="Order not found. ")
+
+    if order.total_cost and order.total_cost > 0:
+        return {"order_id": order.order_id, "subtotal": order.subtotal, "tax": order.tax, "delivery_cost": order.delivery_cost, "total_cost": order.total_cost}
     
     final_total = calculate_order_total(order.subtotal)
 
