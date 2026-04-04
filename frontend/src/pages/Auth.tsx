@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TextField, Button, Typography, Box, Tabs, Tab, Alert } from '@mui/material';
+import { TextField, Button, Box, Tabs, Tab, Alert } from '@mui/material';
 import api from '../api';
 
 const AuthPage: React.FC = () => {
@@ -19,7 +19,7 @@ const AuthPage: React.FC = () => {
     e.preventDefault();
     setError(''); setSuccess('');
     try {
-      const res = await api.post('/auth/register', registerData);
+      await api.post('/auth/register', registerData);
       setSuccess('Registration successful!');
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Registration failed');
@@ -30,7 +30,7 @@ const AuthPage: React.FC = () => {
     e.preventDefault();
     setError(''); setSuccess('');
     try {
-      const res = await api.post('/auth/login', loginData);
+      await api.post('/auth/login', loginData);
       setSuccess('Login successful!');
       // Save token/cookie if needed
     } catch (err: any) {

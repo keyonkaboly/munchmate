@@ -25,9 +25,9 @@ jobs:
           pip install pytest pytest-cov
 
       - name: Run tests
-        working-directory: ./
+        working-directory: ./backend
         env:
-          PYTHONPATH: /home/runner/work/munchmate/munchmate/backend
+          PYTHONPATH: ${{ github.workspace }}/backend
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
-          pytest tests/unit tests/integration -v --tb=short --cov=app --cov-report=term-missing
+          pytest ../tests/unit ../tests/integration -v --tb=short --cov=app --cov-report=term-missing

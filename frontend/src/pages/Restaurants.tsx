@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, Typography, Grid, CircularProgress, Box, TextField, Button } from '@mui/material';
+import { Card, CardContent, Typography, Grid, CircularProgress, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 
@@ -16,7 +16,6 @@ const RestaurantsPage: React.FC = () => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [search, setSearch] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,7 +39,7 @@ const RestaurantsPage: React.FC = () => {
       {loading ? <CircularProgress /> : error ? <Typography color="error">{error}</Typography> : (
         <Grid container spacing={2}>
           {restaurants.map(r => (
-            <Grid item xs={12} sm={6} md={4} key={r.id}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={r.id}>
               <Card onClick={() => navigate(`/restaurants/${r.id}`)} sx={{ cursor: 'pointer' }}>
                 <CardContent>
                   <Typography variant="h6">{r.food_item}</Typography>
