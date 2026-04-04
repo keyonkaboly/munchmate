@@ -409,3 +409,37 @@ def get_delivery_order(order_id: str, db: Session = Depends(get_db)):
     if order.order_id is None:
         order.order_id = order.combined_order_id
     return order
+
+@router_order.post("/{order_id}/reorder")
+def reorder(order_id: str, customer_id: str, db: Session = Depends(get_db)):
+    original_items = get_order_items_or_404(order_id, db)
+    
+    if str(original_items[0].customer_id) != str(customer_id):
+        raise HTTPException(status_code=403, detail="You do not have permission to reorder this order")
+
+    new_combined_order_id = str(uuid.uuid4())
+
+    for item in original_items:
+        new_order = Order(
+            combined_order_id=new_combined_order_id,
+            restaurant_id=item.restaurant_id,
+            food_item=item.food_item,
+            customer_id=item.customer_id,
+            status="Created",
+            delivery_method=item.delivery_method,
+            delivery_distance=item.delivery_distance,
+            delivery_delay=item.delivery_delay,
+            route_taken=item.route_taken,
+            route_type=item.route_type,
+            route_efficiency=item.route_efficiency
+        )
+        db.add(new_order)
+
+    db.commit()
+
+    return {
+        "message": "Reorder created successfully",
+        "new_order_id": new_combined_order_id,
+        "food_items": [item.food_item for item in original_items],
+        "count": len(original_items)
+    }
