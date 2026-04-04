@@ -9,6 +9,8 @@ class Customer(Base):
     password_hash = Column(String, nullable=False)
     user_type = Column(String, nullable=False, default="customer")
     restaurant_manager_restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable=True)
+    loyalty_points = Column(Integer, nullable=False, default=0)
+    loyalty_rewards_available = Column(Integer, nullable=False, default=0)
 
 class Restaurant(Base):
     __tablename__ = "restaurants"

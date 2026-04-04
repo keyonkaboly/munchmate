@@ -3,12 +3,16 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.presentation.schemas.payment_schemas import PaymentRequest, PaymentResponse
 from app.application.services.payment_service import simulate_payment
+from app.application.services.loyalty_service import award_loyalty_for_order
 from app.infrastructure.database.database import get_db
 from app.infrastructure.database.models import Order, Payment
 
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
+
+def get_order_total(orders: list[Order]) -> float:
+    return round(sum(item.total_cost for item in orders if item.total_cost), 2)
 
 def build_payment_response(order_id: str, total_cost: float, result: dict) -> PaymentResponse:
     """Build a payment response from order data and simulation result."""
@@ -37,7 +41,7 @@ def process_payment(data: PaymentRequest, db: Session = Depends(get_db)):
     if not orders:
         raise HTTPException(status_code=404, detail="Order not found")
 
-    total_cost = sum(o.total_cost for o in orders if o.total_cost)
+    total_cost = get_order_total(orders)
 
     if total_cost <= 0:
         return PaymentResponse(
@@ -47,25 +51,30 @@ def process_payment(data: PaymentRequest, db: Session = Depends(get_db)):
             message="Invalid payment amount"
         )
 
-    result = simulate_payment(total_cost, data.card_number)
+    charged_total = round(data.total_cost, 2)
+    result = simulate_payment(charged_total, data.card_number)
 
     if result["success"]:
-        payment = Payment(order_id=data.order_id, status="success", amount=int(total_cost))
+        award_loyalty_for_order(db, data.order_id)
+        payment = Payment(order_id=data.order_id, status="success", amount=int(charged_total))
         db.add(payment)
         db.commit()
 
-    return build_payment_response(data.order_id, total_cost, result)
+    return build_payment_response(data.order_id, charged_total, result)
 
 
 @router.post("/checkout", response_model=PaymentResponse)
 def checkout(data: PaymentRequest, db: Session = Depends(get_db)):
     """Accept mock payment details and trigger simulated payment during checkout."""
+    if data.total_cost is None or data.total_cost <= 0:
+        return PaymentResponse(order_id=data.order_id, total_cost=data.total_cost if data.total_cost is not None else 0, success=False, message="Invalid payment amount")
+
     orders = db.query(Order).filter(Order.combined_order_id == data.order_id).all()
 
     if not orders:
         raise HTTPException(status_code=404, detail="Order not found")
 
-    total_cost = sum(o.total_cost for o in orders if o.total_cost)
+    total_cost = get_order_total(orders)
 
     if total_cost <= 0:
         return PaymentResponse(
@@ -75,14 +84,16 @@ def checkout(data: PaymentRequest, db: Session = Depends(get_db)):
             message="Invalid payment amount"
         )
 
-    result = simulate_payment(total_cost, data.card_number)
+    charged_total = round(data.total_cost, 2)
+    result = simulate_payment(charged_total, data.card_number)
 
     if result["success"]:
-        payment = Payment(order_id=data.order_id, status="success", amount=int(total_cost))
+        award_loyalty_for_order(db, data.order_id)
+        payment = Payment(order_id=data.order_id, status="success", amount=int(charged_total))
         db.add(payment)
         db.commit()
 
-    return build_payment_response(data.order_id, total_cost, result)
+    return build_payment_response(data.order_id, charged_total, result)
 
 
 @router.get("/confirmation/{order_id}")
@@ -111,7 +122,7 @@ def retry_payment(order_id: str, db: Session = Depends(get_db)):
     if not orders:
         raise HTTPException(status_code=404, detail="Order not found")
 
-    total_cost = sum(o.total_cost for o in orders if o.total_cost)
+    total_cost = get_order_total(orders)
 
     if total_cost <= 0:
         return {
@@ -126,6 +137,7 @@ def retry_payment(order_id: str, db: Session = Depends(get_db)):
         payment = Payment(order_id=order_id, status="success", amount=int(total_cost))
         db.add(payment)
         db.commit()
+        award_loyalty_for_order(db, order_id)
 
     return {
         "message": result["message"],

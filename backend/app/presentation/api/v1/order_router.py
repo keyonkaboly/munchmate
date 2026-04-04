@@ -2,8 +2,8 @@ import random
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.infrastructure.database.database import get_db
-from app.infrastructure.database.models import Order, MenuItem
-from app.presentation.schemas.order_schema import StartOrderRequest
+from app.infrastructure.database.models import Order, MenuItem, Payment
+from app.presentation.schemas.order_schema import StartOrderRequest, EarlyCancelRefundResponse
 import uuid
 from app.presentation.schemas.delivery_schemas import OrderCreate, OrderResponse
 
@@ -316,6 +316,43 @@ def cancel_order(order_id: str, db: Session = Depends(get_db)):
     db.commit()
     return {"message": f"Order {order_id} canceled"}
 
+
+@router_order.post("/{order_id}/cancel-with-refund", response_model=EarlyCancelRefundResponse)
+def cancel_order_with_refund(order_id: str, db: Session = Depends(get_db)):
+    """50% refund if the order is still early (not completed) and was paid successfully."""
+    items = get_order_items_or_404(order_id, db)
+    status = items[0].status
+
+    if status not in ("Created", "Submitted"):
+        raise HTTPException(
+            status_code=400,
+            detail="Order is too far along to cancel with a refund",
+        )
+
+    payment = db.query(Payment).filter(
+        Payment.order_id == order_id,
+        Payment.status == "success",
+    ).first()
+    if not payment:
+        raise HTTPException(
+            status_code=400,
+            detail="No successful payment on file; cancellation with refund is not available",
+        )
+
+    refund_amount = round(float(payment.amount) * 0.5, 2)
+
+    for item in items:
+        item.status = "Canceled"
+
+    db.commit()
+
+    return EarlyCancelRefundResponse(
+        message=f"Order {order_id} canceled; refund amount (50% of payment)",
+        order_id=order_id,
+        refund_amount=refund_amount,
+    )
+
+
 @router_order.get("/customer/{customer_id}")
 def get_customer_orders(customer_id: str, db: Session = Depends(get_db)):
     orders = db.query(Order).filter(Order.customer_id == customer_id).all()
@@ -372,3 +409,37 @@ def get_delivery_order(order_id: str, db: Session = Depends(get_db)):
     if order.order_id is None:
         order.order_id = order.combined_order_id
     return order
+
+@router_order.post("/{order_id}/reorder")
+def reorder(order_id: str, customer_id: str, db: Session = Depends(get_db)):
+    original_items = get_order_items_or_404(order_id, db)
+    
+    if str(original_items[0].customer_id) != str(customer_id):
+        raise HTTPException(status_code=403, detail="You do not have permission to reorder this order")
+
+    new_combined_order_id = str(uuid.uuid4())
+
+    for item in original_items:
+        new_order = Order(
+            combined_order_id=new_combined_order_id,
+            restaurant_id=item.restaurant_id,
+            food_item=item.food_item,
+            customer_id=item.customer_id,
+            status="Created",
+            delivery_method=item.delivery_method,
+            delivery_distance=item.delivery_distance,
+            delivery_delay=item.delivery_delay,
+            route_taken=item.route_taken,
+            route_type=item.route_type,
+            route_efficiency=item.route_efficiency
+        )
+        db.add(new_order)
+
+    db.commit()
+
+    return {
+        "message": "Reorder created successfully",
+        "new_order_id": new_combined_order_id,
+        "food_items": [item.food_item for item in original_items],
+        "count": len(original_items)
+    }
