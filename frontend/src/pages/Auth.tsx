@@ -4,7 +4,7 @@ import api from '../api';
 const AuthPage: React.FC = () => {
   const [tab, setTab] = useState(0);
   const [registerData, setRegisterData] = useState({ username: '', email: '', password: '', user_type: 'customer' });
-  const [loginData, setLoginData] = useState({ username: '', password: '' });
+  const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
@@ -16,10 +16,14 @@ const AuthPage: React.FC = () => {
     e.preventDefault();
     setError(''); setSuccess('');
     try {
-      await api.post('/auth/register', registerData);
+      await api.post(`/auth/register?role=${registerData.user_type}`, {
+        username: registerData.username,
+        email: registerData.email,
+        password: registerData.password
+      });
       setSuccess('Registration successful!');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Registration failed');
+      setError(typeof err.response?.data?.detail === 'string' ? err.response.data.detail : 'Registration failed');
     }
   };
   const handleLogin = async (e: React.FormEvent) => {
@@ -29,7 +33,7 @@ const AuthPage: React.FC = () => {
       await api.post('/auth/login', loginData);
       setSuccess('Login successful!');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Login failed');
+      setError(typeof err.response?.data?.detail === 'string' ? err.response.data.detail : 'Login failed');
     }
   };
   return (
@@ -42,7 +46,7 @@ const AuthPage: React.FC = () => {
       {success && <Alert severity="success">{success}</Alert>}
       {tab === 0 ? (
         <form onSubmit={handleLogin}>
-          <TextField label="Username" fullWidth margin="normal" required value={loginData.username} onChange={e => setLoginData({ ...loginData, username: e.target.value })} />
+          <TextField label="Email" type="email" fullWidth margin="normal" required value={loginData.email} onChange={e => setLoginData({ ...loginData, email: e.target.value })} />
           <TextField label="Password" type="password" fullWidth margin="normal" required value={loginData.password} onChange={e => setLoginData({ ...loginData, password: e.target.value })} />
           <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>Login</Button>
         </form>

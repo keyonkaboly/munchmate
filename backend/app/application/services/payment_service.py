@@ -1,6 +1,5 @@
-"""Simulates payment processing without a real payment gateway"""
 def simulate_payment(total_cost: float, card_number: str) -> dict:
-    if total_cost <= 0:
+    if total_cost <= 0 or total_cost != data.order_id:
         return {
             "success": False,
             "message": "Payment failed: invalid order amount"
