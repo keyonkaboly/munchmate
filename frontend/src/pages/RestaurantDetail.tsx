@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Typography, Box, CircularProgress, Divider, Card, CardContent } from '@mui/material';
+import { useParams, Link as RouterLink } from 'react-router-dom';
+import { Typography, Box, CircularProgress, Divider, Card, CardContent, Button } from '@mui/material';
 import api from '../api';
 interface MenuItem {
   food_item: string;
@@ -39,7 +39,12 @@ const RestaurantDetailPage: React.FC = () => {
   if (!restaurant) return <Typography>Restaurant not found</Typography>;
   return (
     <Box p={3}>
-      <Typography variant="h4">{restaurant.food_item}</Typography>
+      <Box display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={1} mb={1}>
+        <Typography variant="h4">{restaurant.food_item}</Typography>
+        <Button variant="contained" component={RouterLink} to={`/order?restaurantId=${restaurant.id}`}>
+          Start order here
+        </Button>
+      </Box>
       <Typography variant="body1">Location: {restaurant.location}</Typography>
       <Typography variant="body1">Cuisine: {restaurant.cuisine_type}</Typography>
       <Typography variant="body1">Halal: {restaurant.is_halal ? 'Yes' : 'No'}</Typography>
