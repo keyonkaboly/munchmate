@@ -266,7 +266,7 @@ const OrderPage: React.FC = () => {
             </MenuItem>
             {restaurants.map((r) => (
               <MenuItem key={r.id} value={String(r.id)}>
-                {r.food_item} — {r.location}
+                Restaurant {r.id}
               </MenuItem>
             ))}
           </Select>
@@ -278,7 +278,7 @@ const OrderPage: React.FC = () => {
       {menuRestaurant && !menuLoading && (
         <>
           <Typography variant="h6" mb={1}>
-            Menu — {menuRestaurant.food_item}
+            Menu — Restaurant {menuRestaurant.id}
           </Typography>
           <List dense sx={{ mb: 2 }}>
             {menuRestaurant.menu_items.map((item) => (
