@@ -79,8 +79,14 @@ const OrderPage: React.FC = () => {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
   const [customerOrders, setCustomerOrders] = useState<CustomerOrdersResponse | null>(null);
+
+  // NEW: tracks which order+item is being edited for quantity update
+  const [updateQtyState, setUpdateQtyState] = useState<{
+    orderId: string;
+    foodItem: string;
+    qty: number;
+  } | null>(null);
 
   const selectedIdNum = restaurantId ? parseInt(restaurantId, 10) : NaN;
 
@@ -115,17 +121,9 @@ const OrderPage: React.FC = () => {
     setOrdersLoading(false);
   }, [customerId]);
 
-  useEffect(() => {
-    loadRestaurants();
-  }, [loadRestaurants]);
-
-  useEffect(() => {
-    sessionStorage.setItem(CUSTOMER_STORAGE_KEY, String(customerId));
-  }, [customerId]);
-
-  useEffect(() => {
-    loadCustomerOrders();
-  }, [loadCustomerOrders]);
+  useEffect(() => { loadRestaurants(); }, [loadRestaurants]);
+  useEffect(() => { sessionStorage.setItem(CUSTOMER_STORAGE_KEY, String(customerId)); }, [customerId]);
+  useEffect(() => { loadCustomerOrders(); }, [loadCustomerOrders]);
 
   useEffect(() => {
     if (paramRestaurantId && restaurants.length > 0) {
@@ -135,10 +133,7 @@ const OrderPage: React.FC = () => {
   }, [paramRestaurantId, restaurants]);
 
   useEffect(() => {
-    if (!restaurantId) {
-      setMenuRestaurant(null);
-      return;
-    }
+    if (!restaurantId) { setMenuRestaurant(null); return; }
     const fetchMenu = async () => {
       setMenuLoading(true);
       setError('');
@@ -154,10 +149,7 @@ const OrderPage: React.FC = () => {
     fetchMenu();
   }, [restaurantId]);
 
-  const addToCart = (foodItem: string) => {
-    setCart((c) => [...c, foodItem]);
-    setSuccess('');
-  };
+  const addToCart = (foodItem: string) => { setCart((c) => [...c, foodItem]); setSuccess(''); };
 
   const removeOneFromCart = (foodItem: string) => {
     setCart((c) => {
@@ -169,8 +161,7 @@ const OrderPage: React.FC = () => {
 
   const handlePlaceOrder = async () => {
     if (!Number.isFinite(selectedIdNum) || cart.length === 0) return;
-    setError('');
-    setSuccess('');
+    setError(''); setSuccess('');
     try {
       const res = await api.post('/orders/create', {
         customer_id: customerId,
@@ -189,8 +180,7 @@ const OrderPage: React.FC = () => {
   };
 
   const handleSubmitOrder = async (orderId: string) => {
-    setError('');
-    setSuccess('');
+    setError(''); setSuccess('');
     try {
       await api.post(`/orders/${orderId}/submit`);
       setSuccess(`Order ${orderId} submitted.`);
@@ -202,8 +192,7 @@ const OrderPage: React.FC = () => {
   };
 
   const handleCancelOrder = async (orderId: string) => {
-    setError('');
-    setSuccess('');
+    setError(''); setSuccess('');
     try {
       await api.patch(`/orders/${orderId}/cancel`);
       setSuccess(`Order ${orderId} canceled.`);
@@ -214,25 +203,46 @@ const OrderPage: React.FC = () => {
     }
   };
 
+  // NEW: Cancel with Refund
+  const handleCancelWithRefund = async (orderId: string) => {
+    setError(''); setSuccess('');
+    try {
+      await api.post(`/orders/${orderId}/cancel-with-refund`);
+      setSuccess(`Order ${orderId} canceled with refund.`);
+      await loadCustomerOrders();
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setError(typeof detail === 'string' ? detail : 'Cancel with refund failed');
+    }
+  };
+
+  // NEW: Update Item Quantity
+  const handleUpdateQuantity = async () => {
+    if (!updateQtyState) return;
+    const { orderId, foodItem, qty } = updateQtyState;
+    setError(''); setSuccess('');
+    try {
+      await api.patch(`/orders/${orderId}/update-item`, null, {
+        params: { food_item: foodItem, quantity: qty },
+      });
+      setSuccess(`Updated "${foodItem}" quantity to ${qty}.`);
+      setUpdateQtyState(null);
+      await loadCustomerOrders();
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setError(typeof detail === 'string' ? detail : 'Update quantity failed');
+    }
+  };
+
   return (
     <Box p={3}>
-      <Typography variant="h4" mb={2}>
-        Place an order
-      </Typography>
+      <Typography variant="h4" mb={2}>Place an order</Typography>
       <Typography variant="body2" color="text.secondary" mb={2}>
         Choose a restaurant, add menu items, then create the order. Use the same customer ID as elsewhere (e.g. notifications). After creating an order, continue to Checkout to calculate totals and pay.
       </Typography>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
-          {error}
-        </Alert>
-      )}
-      {success && (
-        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>
-          {success}
-        </Alert>
-      )}
+      {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>{success}</Alert>}
 
       <TextField
         label="Customer ID"
@@ -247,27 +257,18 @@ const OrderPage: React.FC = () => {
         helperText="Must match the user you use for notifications/history"
       />
 
-      {listLoading ? (
-        <CircularProgress />
-      ) : (
+      {listLoading ? <CircularProgress /> : (
         <FormControl fullWidth sx={{ maxWidth: 480, mb: 2 }}>
           <InputLabel id="restaurant-select-label">Restaurant</InputLabel>
           <Select
             labelId="restaurant-select-label"
             label="Restaurant"
             value={restaurantId}
-            onChange={(e) => {
-              setRestaurantId(e.target.value);
-              setCart([]);
-            }}
+            onChange={(e) => { setRestaurantId(e.target.value); setCart([]); }}
           >
-            <MenuItem value="">
-              <em>Select a restaurant</em>
-            </MenuItem>
+            <MenuItem value=""><em>Select a restaurant</em></MenuItem>
             {restaurants.map((r) => (
-              <MenuItem key={r.id} value={String(r.id)}>
-                Restaurant {r.id}
-              </MenuItem>
+              <MenuItem key={r.id} value={String(r.id)}>Restaurant {r.id}</MenuItem>
             ))}
           </Select>
         </FormControl>
@@ -277,17 +278,13 @@ const OrderPage: React.FC = () => {
 
       {menuRestaurant && !menuLoading && (
         <>
-          <Typography variant="h6" mb={1}>
-            Menu — Restaurant {menuRestaurant.id}
-          </Typography>
+          <Typography variant="h6" mb={1}>Menu — Restaurant {menuRestaurant.id}</Typography>
           <List dense sx={{ mb: 2 }}>
             {menuRestaurant.menu_items.map((item) => (
               <ListItem
                 key={item.food_item}
                 secondaryAction={
-                  <Button size="small" variant="outlined" onClick={() => addToCart(item.food_item)}>
-                    Add
-                  </Button>
+                  <Button size="small" variant="outlined" onClick={() => addToCart(item.food_item)}>Add</Button>
                 }
               >
                 <ListItemText
@@ -301,51 +298,31 @@ const OrderPage: React.FC = () => {
       )}
 
       <Divider sx={{ my: 2 }} />
-      <Typography variant="h6" mb={1}>
-        Cart
-      </Typography>
+      <Typography variant="h6" mb={1}>Cart</Typography>
       {cart.length === 0 ? (
         <Typography color="text.secondary">No items yet.</Typography>
       ) : (
         <Box sx={{ mb: 2 }}>
           {Object.entries(cartCounts).map(([name, qty]) => (
-            <Chip
-              key={name}
-              label={`${name} × ${qty}`}
-              onDelete={() => removeOneFromCart(name)}
-              sx={{ mr: 1, mb: 1 }}
-            />
+            <Chip key={name} label={`${name} × ${qty}`} onDelete={() => removeOneFromCart(name)} sx={{ mr: 1, mb: 1 }} />
           ))}
-          <Box>
-            <Button size="small" onClick={() => setCart([])}>
-              Clear cart
-            </Button>
-          </Box>
+          <Box><Button size="small" onClick={() => setCart([])}>Clear cart</Button></Box>
         </Box>
       )}
 
-      <Button
-        variant="contained"
-        disabled={!Number.isFinite(selectedIdNum) || cart.length === 0}
-        onClick={handlePlaceOrder}
-      >
+      <Button variant="contained" disabled={!Number.isFinite(selectedIdNum) || cart.length === 0} onClick={handlePlaceOrder}>
         Create order
       </Button>
 
       <Divider sx={{ my: 3 }} />
       <Box display="flex" alignItems="center" gap={2} mb={2}>
         <Typography variant="h5">Your orders</Typography>
-        <Button size="small" onClick={loadCustomerOrders} disabled={ordersLoading}>
-          Refresh
-        </Button>
+        <Button size="small" onClick={loadCustomerOrders} disabled={ordersLoading}>Refresh</Button>
       </Box>
-      {ordersLoading ? (
-        <CircularProgress size={24} />
-      ) : customerOrders ? (
+
+      {ordersLoading ? <CircularProgress size={24} /> : customerOrders ? (
         <>
-          <Typography variant="subtitle1" fontWeight="bold" mt={2}>
-            In progress
-          </Typography>
+          <Typography variant="subtitle1" fontWeight="bold" mt={2}>In progress</Typography>
           {customerOrders.current_orders.length === 0 ? (
             <Typography color="text.secondary">None</Typography>
           ) : (
@@ -357,23 +334,78 @@ const OrderPage: React.FC = () => {
                     Restaurant #{o.restaurant_id} · {o.status}
                   </Typography>
                   <Typography variant="body2">{o.food_items.join(', ')}</Typography>
+
                   {o.status === 'Created' && (
-                    <Box mt={1} display="flex" gap={1} flexWrap="wrap">
-                      <Button size="small" variant="contained" onClick={() => handleSubmitOrder(o.order_id)}>
-                        Submit order
-                      </Button>
-                      <Button size="small" color="warning" onClick={() => handleCancelOrder(o.order_id)}>
-                        Cancel
+                    <>
+                      {/* Action buttons */}
+                      <Box mt={1} display="flex" gap={1} flexWrap="wrap">
+                        <Button size="small" variant="contained" onClick={() => handleSubmitOrder(o.order_id)}>
+                          Submit order
+                        </Button>
+                        <Button size="small" color="warning" onClick={() => handleCancelOrder(o.order_id)}>
+                          Cancel
+                        </Button>
+                      </Box>
+
+                      {/* NEW: Update Item Quantity */}
+                      <Box mt={2}>
+                        {updateQtyState?.orderId === o.order_id ? (
+                          <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
+                            <FormControl size="small" sx={{ minWidth: 160 }}>
+                              <InputLabel id={`item-select-${o.order_id}`}>Item</InputLabel>
+                              <Select
+                                labelId={`item-select-${o.order_id}`}
+                                label="Item"
+                                value={updateQtyState.foodItem}
+                                onChange={(e) => setUpdateQtyState((s) => s && { ...s, foodItem: e.target.value })}
+                              >
+                                {o.food_items.map((fi) => (
+                                  <MenuItem key={fi} value={fi}>{fi}</MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                            <TextField
+                              label="Qty"
+                              type="number"
+                              size="small"
+                              sx={{ width: 80 }}
+                              value={updateQtyState.qty}
+                              inputProps={{ min: 1 }}
+                              onChange={(e) => {
+                                const n = parseInt(e.target.value, 10);
+                                setUpdateQtyState((s) => s && { ...s, qty: n > 0 ? n : 1 });
+                              }}
+                            />
+                            <Button size="small" variant="contained" onClick={handleUpdateQuantity}>Save</Button>
+                            <Button size="small" onClick={() => setUpdateQtyState(null)}>Cancel</Button>
+                          </Box>
+                        ) : (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => setUpdateQtyState({ orderId: o.order_id, foodItem: o.food_items[0] ?? '', qty: 1 })}
+                          >
+                            Update item quantity
+                          </Button>
+                        )}
+                      </Box>
+                    </>
+                  )}
+
+                  {o.status === 'Submitted' && (
+                    <Box mt={1}>
+                      <Button size="small" color="error" variant="outlined" onClick={() => handleCancelWithRefund(o.order_id)}>
+                        Cancel with Refund
                       </Button>
                     </Box>
                   )}
+                  
                 </CardContent>
               </Card>
             ))
           )}
-          <Typography variant="subtitle1" fontWeight="bold" mt={2}>
-            Past
-          </Typography>
+
+          <Typography variant="subtitle1" fontWeight="bold" mt={2}>Past</Typography>
           {customerOrders.past_orders.length === 0 ? (
             <Typography color="text.secondary">None</Typography>
           ) : (
@@ -381,9 +413,7 @@ const OrderPage: React.FC = () => {
               <Card key={o.order_id} sx={{ mb: 1, mt: 1 }}>
                 <CardContent>
                   <Typography variant="subtitle1">{o.order_id}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {o.status}
-                  </Typography>
+                  <Typography variant="body2" color="text.secondary">{o.status}</Typography>
                   <Typography variant="body2">{o.food_items.join(', ')}</Typography>
                 </CardContent>
               </Card>
