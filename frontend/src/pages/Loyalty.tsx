@@ -12,8 +12,18 @@ import {
   Typography,
 } from '@mui/material';
 import api from '../api';
+import { useAuth } from '../auth/AuthContext';
 
 const CUSTOMER_STORAGE_KEY = 'munchmate_customer_id';
+const LOYALTY_DISCOUNT_STORAGE_KEY = 'munchmate_loyalty_discounts';
+
+interface StoredLoyaltyDiscount {
+  order_total: number;
+  discount_percent: number;
+  discount_amount: number;
+  discounted_total: number;
+  applied_at: string;
+}
 
 interface LoyaltySummary {
   points: number;
@@ -38,6 +48,7 @@ function readStoredCustomerId(): number {
 }
 
 const LoyaltyPage: React.FC = () => {
+  const { user } = useAuth();
   const [customerId, setCustomerId] = useState<number>(readStoredCustomerId);
   const [orderId, setOrderId] = useState('');
   const [summary, setSummary] = useState<LoyaltySummary | null>(null);
@@ -45,6 +56,45 @@ const LoyaltyPage: React.FC = () => {
   const [loadingSummary, setLoadingSummary] = useState(false);
   const [applyingReward, setApplyingReward] = useState(false);
   const [error, setError] = useState('');
+
+  const persistDiscount = (order: string, data: LoyaltyApplyResponse) => {
+    if (
+      data.discounted_total === undefined ||
+      data.discount_amount === undefined ||
+      data.discount_percent === undefined ||
+      data.order_total === undefined
+    ) {
+      return;
+    }
+
+    const raw = sessionStorage.getItem(LOYALTY_DISCOUNT_STORAGE_KEY);
+    const parsed = raw ? (JSON.parse(raw) as Record<string, StoredLoyaltyDiscount>) : {};
+
+    parsed[order] = {
+      order_total: data.order_total,
+      discount_percent: data.discount_percent,
+      discount_amount: data.discount_amount,
+      discounted_total: data.discounted_total,
+      applied_at: new Date().toISOString(),
+    };
+
+    sessionStorage.setItem(LOYALTY_DISCOUNT_STORAGE_KEY, JSON.stringify(parsed));
+  };
+
+  const goToCheckoutWithOrder = (oid: string | undefined) => {
+    if (!oid) {
+      return;
+    }
+    sessionStorage.setItem('munchmate_active_order_id', oid);
+    window.location.href = '/checkout';
+  };
+
+  React.useEffect(() => {
+    if (user?.id) {
+      setCustomerId(user.id);
+      sessionStorage.setItem(CUSTOMER_STORAGE_KEY, String(user.id));
+    }
+  }, [user?.id]);
 
   const fetchSummary = async () => {
     setLoadingSummary(true);
@@ -78,6 +128,11 @@ const LoyaltyPage: React.FC = () => {
         combined_order_id: orderId.trim(),
       });
       setApplyResult(response.data);
+
+      if (response.data.applied) {
+        persistDiscount(orderId.trim(), response.data);
+      }
+
       await fetchSummary();
     } catch (applyError: unknown) {
       const detail = (applyError as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
@@ -103,6 +158,7 @@ const LoyaltyPage: React.FC = () => {
             setCustomerId(Number.isFinite(value) && value > 0 ? value : 1);
           }}
           sx={{ maxWidth: 220 }}
+          helperText={user ? 'Auto-filled from your logged-in account.' : undefined}
         />
         <Button variant="contained" onClick={fetchSummary} disabled={loadingSummary}>
           {loadingSummary ? <CircularProgress size={22} /> : 'Load rewards'}
@@ -170,6 +226,13 @@ const LoyaltyPage: React.FC = () => {
                   <Typography fontWeight={600}>
                     New total: ${applyResult.discounted_total?.toFixed(2)}
                   </Typography>
+                  <Button
+                    variant="outlined"
+                    sx={{ mt: 1 }}
+                    onClick={() => goToCheckoutWithOrder(applyResult.combined_order_id)}
+                  >
+                    Go to checkout with this order
+                  </Button>
                 </Box>
               )}
             </>

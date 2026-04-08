@@ -1,20 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Container,
-  Typography,
+  Alert,
+  Box,
+  Button,
   Card,
   CardContent,
-  TextField,
-  Button,
-  Grid,
-  Box,
+  Checkbox,
+  CircularProgress,
   Divider,
-  Alert,
-  CircularProgress
+  FormControlLabel,
+  Stack,
+  TextField,
+  Typography,
 } from '@mui/material';
 import api from '../api';
+import { useAuth } from '../auth/AuthContext';
 
-interface CheckoutData {
+const ACTIVE_ORDER_KEY = 'munchmate_active_order_id';
+
+interface CheckoutTotals {
   order_id: string;
   subtotal: number;
   tax: number;
@@ -22,204 +26,387 @@ interface CheckoutData {
   total_cost: number;
 }
 
+interface PaymentResponse {
+  success: boolean;
+  message: string;
+}
+
+interface LoyaltySummary {
+  points: number;
+  reward_percent: number;
+}
+
+interface LoyaltyApplyResponse {
+  applied: boolean;
+  reason?: string;
+  discounted_total?: number;
+}
+
+const extractApiErrorMessage = (err: unknown): string => {
+  if (!(err instanceof Object) || !('response' in err)) {
+    return err instanceof Error ? err.message : '';
+  }
+
+  const response = (err as { response?: { data?: unknown } }).response;
+  const data = response?.data;
+
+  if (data instanceof Object) {
+    const maybe = data as {
+      detail?: string | Array<{ msg?: string }>;
+      message?: string;
+      error?: string;
+    };
+
+    if (typeof maybe.detail === 'string' && maybe.detail.trim()) return maybe.detail;
+    if (Array.isArray(maybe.detail) && maybe.detail.length > 0) {
+      const first = maybe.detail[0]?.msg;
+      if (typeof first === 'string' && first.trim()) return first;
+    }
+    if (typeof maybe.message === 'string' && maybe.message.trim()) return maybe.message;
+    if (typeof maybe.error === 'string' && maybe.error.trim()) return maybe.error;
+  }
+
+  return err instanceof Error ? err.message : '';
+};
+
 const CheckoutPage: React.FC = () => {
-  const [orderId, setOrderId] = useState('');
+  const { user } = useAuth();
+
+  const [orderId, setOrderId] = useState(() => sessionStorage.getItem(ACTIVE_ORDER_KEY) ?? '');
   const [cardNumber, setCardNumber] = useState('');
-  const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null);
+  const [totals, setTotals] = useState<CheckoutTotals | null>(null);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [paymentMessage, setPaymentMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
-  // Get order ID from URL params or localStorage (you might want to pass it from previous page)
+  const [useLoyalty, setUseLoyalty] = useState(false);
+  const [loyaltySummary, setLoyaltySummary] = useState<LoyaltySummary | null>(null);
+  const [loadingLoyalty, setLoadingLoyalty] = useState(false);
+
+  const mapLoyaltyReason = (reason?: string): string => {
+    if (reason === 'no_rewards_available') return "You don't have loyalty available right now.";
+    if (reason === 'order_not_found') return 'Order not found for loyalty.';
+    if (reason === 'order_not_owned_by_customer') return 'This order is not yours.';
+    if (reason === 'order_total_invalid') return 'This order total is not eligible for loyalty.';
+    return 'Could not apply loyalty right now.';
+  };
+
+  const displayedTotal = useMemo(() => {
+    if (!totals) return 0;
+    if (!useLoyalty || !loyaltySummary) return totals.total_cost;
+    return Number((totals.total_cost * (1 - loyaltySummary.reward_percent / 100)).toFixed(2));
+  }, [totals, useLoyalty, loyaltySummary]);
+
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const orderIdFromUrl = urlParams.get('orderId');
-    if (orderIdFromUrl) {
-      setOrderId(orderIdFromUrl);
-      calculateCheckout(orderIdFromUrl);
+    const loadLoyalty = async () => {
+      if (!user?.id) {
+        setLoyaltySummary(null);
+        return;
+      }
+      setLoadingLoyalty(true);
+      try {
+        const res = await api.get<LoyaltySummary>(`/loyalty/${user.id}`);
+        setLoyaltySummary(res.data);
+      } catch {
+        setLoyaltySummary(null);
+      } finally {
+        setLoadingLoyalty(false);
+      }
+    };
+
+    void loadLoyalty();
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!orderId.trim()) {
+      setTotals(null);
+      return;
     }
-  }, []);
 
-  const calculateCheckout = async (orderId: string) => {
-    if (!orderId.trim()) return;
+    const calculate = async () => {
+      setLoading(true);
+      setError('');
+      setTotals(null);
+      setPaymentSuccess(false);
+      setPaymentMessage('');
+      try {
+        const res = await api.post<CheckoutTotals>('/checkout/calculate', { order_id: orderId.trim() });
+        setTotals(res.data);
+      } catch (err: unknown) {
+        const detail =
+          err instanceof Object &&
+          'response' in err &&
+          err.response instanceof Object &&
+          'data' in err.response &&
+          err.response.data instanceof Object &&
+          'detail' in err.response.data
+            ? (err.response.data as { detail: string }).detail
+            : '';
+        setError(typeof detail === 'string' && detail ? detail : 'Could not calculate totals. Check the order ID.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    setLoading(true);
-    setError('');
-    try {
-      const response = await api.post('/checkout/calculate', {
-        order_id: orderId
-      });
-      setCheckoutData(response.data);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Failed to calculate checkout totals');
-    } finally {
-      setLoading(false);
-    }
-  };
+    void calculate();
+  }, [orderId]);
 
-  const handleCalculate = () => {
-    calculateCheckout(orderId);
-  };
+  const handlePay = async () => {
+    if (!totals || !cardNumber.trim()) return;
 
-  const handlePlaceOrder = async () => {
-    if (!checkoutData || !cardNumber.trim()) {
-      setError('Please enter order ID and card number');
+    const normalizedCard = cardNumber.replace(/\s+/g, '');
+    if (!/^\d{16}$/.test(normalizedCard)) {
+      setError('Card number must be exactly 16 digits.');
       return;
     }
 
     setLoading(true);
     setError('');
-    setSuccess('');
+    setPaymentMessage('');
 
     try {
-      // First place the order
-      const placeResponse = await api.post(`/checkout/orders/${orderId}/place`);
-      setCheckoutData(placeResponse.data);
+      await api.post(`/checkout/orders/${orderId.trim()}/place`);
 
-      // Note: Payment processing endpoint was removed, so we'll just show success
-      setSuccess('Order placed successfully! Payment would be processed here.');
+      let finalAmount = totals.total_cost;
+      if (useLoyalty) {
+        if (!user?.id) {
+          setError('You must be logged in to apply loyalty.');
+          return;
+        }
 
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to place order');
+        let loyaltyRes;
+        try {
+          loyaltyRes = await api.post<LoyaltyApplyResponse>('/loyalty/apply', {
+            customer_id: user.id,
+            combined_order_id: orderId.trim(),
+          });
+        } catch (loyaltyErr: unknown) {
+          const loyaltyDetail = extractApiErrorMessage(loyaltyErr);
+          setError(
+            loyaltyDetail
+              ? `Loyalty validation failed: ${loyaltyDetail}. Uncheck loyalty to continue with normal payment.`
+              : 'Loyalty validation failed. Uncheck loyalty to continue with normal payment.',
+          );
+          return;
+        }
+
+        if (!loyaltyRes.data.applied) {
+          setError(`${mapLoyaltyReason(loyaltyRes.data.reason)} Uncheck loyalty to continue with normal payment.`);
+          return;
+        }
+
+        if (typeof loyaltyRes.data.discounted_total !== 'number') {
+          setError('Loyalty validation failed. Uncheck loyalty to continue with normal payment.');
+          return;
+        }
+
+        finalAmount = loyaltyRes.data.discounted_total;
+      }
+
+      const paymentRes = await api.post<PaymentResponse>('/payments/checkout', {
+        order_id: orderId.trim(),
+        total_cost: finalAmount,
+        card_number: normalizedCard,
+      });
+
+      setPaymentSuccess(paymentRes.data.success);
+      setPaymentMessage(paymentRes.data.message);
+
+      if (paymentRes.data.success) {
+        sessionStorage.removeItem(ACTIVE_ORDER_KEY);
+      } else {
+        setError(paymentRes.data.message || 'Payment failed. Please try again.');
+      }
+    } catch (err: unknown) {
+      const detail = extractApiErrorMessage(err);
+      setError(detail || 'Payment failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
+  const handleCancelWithRefund = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await api.post(`/orders/${orderId.trim()}/cancel-with-refund`);
+      setPaymentSuccess(false);
+      setPaymentMessage('Order canceled and refund issued.');
+    } catch (err: unknown) {
+      const detail =
+        err instanceof Object &&
+        'response' in err &&
+        err.response instanceof Object &&
+        'data' in err.response &&
+        err.response.data instanceof Object &&
+        'detail' in err.response.data
+          ? (err.response.data as { detail: string }).detail
+          : '';
+      setError(typeof detail === 'string' && detail ? detail : 'Refund failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Checkout & Payment
+    <Box p={3} maxWidth={540} mx="auto">
+      <Typography variant="h4" mb={2}>
+        Checkout
       </Typography>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
           {error}
         </Alert>
       )}
-
-      {success && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          {success}
+      {paymentMessage && (
+        <Alert severity={paymentSuccess ? 'success' : 'info'} sx={{ mb: 2 }}>
+          {paymentMessage}
         </Alert>
       )}
 
-      <Grid container spacing={3}>
-        {/* Order Details */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Order Details
-              </Typography>
+      <TextField
+        label="Order ID"
+        fullWidth
+        value={orderId}
+        onChange={(e) => {
+          setOrderId(e.target.value);
+          setPaymentSuccess(false);
+          setPaymentMessage('');
+          setError('');
+          setUseLoyalty(false);
+        }}
+        helperText="Auto-filled when you create an order, or paste it manually."
+        sx={{ mb: 2 }}
+      />
 
-              <TextField
-                fullWidth
-                label="Order ID"
-                value={orderId}
-                onChange={(e) => setOrderId(e.target.value)}
-                margin="normal"
-                required
-              />
+      {loading && !totals && (
+        <Box display="flex" justifyContent="center" py={2}>
+          <CircularProgress size={28} />
+        </Box>
+      )}
 
-              <Button
-                variant="outlined"
-                onClick={handleCalculate}
-                disabled={loading || !orderId.trim()}
-                sx={{ mt: 1 }}
-              >
-                {loading ? <CircularProgress size={20} /> : 'Calculate Totals'}
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Order Summary */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Order Summary
-              </Typography>
-
-              {checkoutData ? (
-                <Box>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                    <Typography>Subtotal:</Typography>
-                    <Typography>{formatCurrency(checkoutData.subtotal)}</Typography>
-                  </Box>
-
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                    <Typography>Tax:</Typography>
-                    <Typography>{formatCurrency(checkoutData.tax)}</Typography>
-                  </Box>
-
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                    <Typography>Delivery Cost:</Typography>
-                    <Typography>{formatCurrency(checkoutData.delivery_cost)}</Typography>
-                  </Box>
-
-                  <Divider sx={{ my: 2 }} />
-
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography variant="h6">Total:</Typography>
-                    <Typography variant="h6" color="primary">
-                      {formatCurrency(checkoutData.total_cost)}
-                    </Typography>
-                  </Box>
-                </Box>
-              ) : (
-                <Typography color="text.secondary">
-                  Enter order ID and click "Calculate Totals" to see summary
+      {totals && (
+        <Card variant="outlined" sx={{ mb: 2 }}>
+          <CardContent>
+            <Typography variant="h6" mb={1}>
+              Order summary
+            </Typography>
+            <Stack spacing={0.5}>
+              <Stack direction="row" justifyContent="space-between">
+                <Typography variant="body2">Subtotal</Typography>
+                <Typography variant="body2">${totals.subtotal.toFixed(2)}</Typography>
+              </Stack>
+              <Stack direction="row" justifyContent="space-between">
+                <Typography variant="body2">Tax</Typography>
+                <Typography variant="body2">${totals.tax.toFixed(2)}</Typography>
+              </Stack>
+              <Stack direction="row" justifyContent="space-between">
+                <Typography variant="body2">Delivery</Typography>
+                <Typography variant="body2">${totals.delivery_cost.toFixed(2)}</Typography>
+              </Stack>
+              <Divider />
+              <Stack direction="row" justifyContent="space-between">
+                <Typography fontWeight="bold">Total</Typography>
+                <Typography fontWeight="bold">
+                  {useLoyalty && loyaltySummary ? (
+                    <>
+                      <Box component="span" sx={{ textDecoration: 'line-through', mr: 1 }}>
+                        ${totals.total_cost.toFixed(2)}
+                      </Box>
+                      <Box component="span" color="success.main">
+                        ${displayedTotal.toFixed(2)}
+                      </Box>
+                    </>
+                  ) : (
+                    `$${totals.total_cost.toFixed(2)}`
+                  )}
                 </Typography>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
+              </Stack>
+            </Stack>
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Payment Information */}
-        <Grid size={{ xs: 12 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Payment Information
-              </Typography>
-
-              <TextField
-                fullWidth
-                label="Card Number"
-                value={cardNumber}
-                onChange={(e) => setCardNumber(e.target.value)}
-                margin="normal"
-                placeholder="Enter 16-digit card number"
-                required
-                inputProps={{ maxLength: 16 }}
+      {totals && !paymentSuccess && (
+        <>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={useLoyalty}
+                onChange={(event) => {
+                  setUseLoyalty(event.target.checked);
+                  setError('');
+                  setPaymentMessage('');
+                }}
+                disabled={loading}
               />
+            }
+            label="Apply loyalty reward (if available)"
+            sx={{ mb: 1 }}
+          />
 
-              <Box sx={{ mt: 3 }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="large"
-                  onClick={handlePlaceOrder}
-                  disabled={loading || !checkoutData || !cardNumber.trim()}
-                  fullWidth
-                >
-                  {loading ? <CircularProgress size={24} /> : 'Place Order & Pay'}
-                </Button>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    </Container>
+          {loadingLoyalty ? (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Loading loyalty info...
+            </Typography>
+          ) : loyaltySummary ? (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Loyalty points: {loyaltySummary.points}. Eligible rewards apply {loyaltySummary.reward_percent}% off.
+            </Typography>
+          ) : (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Loyalty status unavailable right now.
+            </Typography>
+          )}
+
+          {useLoyalty && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              This is an estimate from your loyalty summary. Final loyalty eligibility is verified when you click Pay.
+            </Alert>
+          )}
+
+          <TextField
+            label="Card number"
+            fullWidth
+            value={cardNumber}
+            onChange={(e) => setCardNumber(e.target.value)}
+            placeholder="4111111111111111"
+            helperText="Enter exactly 16 digits (test card: 4111111111111111)."
+            sx={{ mb: 2 }}
+          />
+
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth
+            disabled={loading || !cardNumber.trim()}
+            onClick={() => {
+              void handlePay();
+            }}
+          >
+            {loading ? <CircularProgress size={22} color="inherit" /> : `Pay $${displayedTotal.toFixed(2)}`}
+          </Button>
+        </>
+      )}
+
+      {paymentSuccess && (
+        <Box mt={2}>
+          <Button
+            variant="outlined"
+            color="error"
+            fullWidth
+            disabled={loading}
+            onClick={() => {
+              void handleCancelWithRefund();
+            }}
+          >
+            Cancel with Refund
+          </Button>
+        </Box>
+      )}
+    </Box>
   );
 };
 

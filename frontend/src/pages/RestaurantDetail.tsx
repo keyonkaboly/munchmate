@@ -1,6 +1,24 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
-import { Typography, Box, CircularProgress, Divider, Card, CardContent, Button, TextField } from '@mui/material';
+import {
+  Typography,
+  Box,
+  CircularProgress,
+  Divider,
+  Card,
+  CardContent,
+  Button,
+  TextField,
+  Checkbox,
+  FormControlLabel,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Stack,
+  Pagination,
+} from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material';
 import api from '../api';
 interface MenuItem {
   food_item: string;
@@ -17,12 +35,22 @@ interface Restaurant {
   is_vegetarian: boolean;
   menu_items: MenuItem[];
 }
+
+type SortBy = 'food_item' | 'price';
+type SortOrder = 'asc' | 'desc';
+
 const RestaurantDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [menuSearch, setMenuSearch] = useState('');
+  const [onlyHalal, setOnlyHalal] = useState(false);
+  const [onlyVegetarian, setOnlyVegetarian] = useState(false);
+  const [sortBy, setSortBy] = useState<SortBy>('food_item');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
 
   useEffect(() => {
     const fetchRestaurant = async () => {
@@ -40,12 +68,52 @@ const RestaurantDetailPage: React.FC = () => {
   const filteredMenuItems = useMemo(() => {
     const menuItems = restaurant?.menu_items ?? [];
     const query = menuSearch.trim().toLowerCase();
-    if (!query) {
-      return menuItems;
-    }
+    const filtered = menuItems.filter((item) => {
+      const matchesQuery = !query || item.food_item.toLowerCase().includes(query);
+      const matchesHalal = !onlyHalal || item.is_halal;
+      const matchesVegetarian = !onlyVegetarian || item.is_vegetarian;
+      return matchesQuery && matchesHalal && matchesVegetarian;
+    });
 
-    return menuItems.filter((item) => item.food_item.toLowerCase().includes(query));
-  }, [menuSearch, restaurant]);
+    filtered.sort((left, right) => {
+      if (sortBy === 'price') {
+        return sortOrder === 'asc' ? left.price - right.price : right.price - left.price;
+      }
+
+      const compare = left.food_item.localeCompare(right.food_item);
+      return sortOrder === 'asc' ? compare : -compare;
+    });
+
+    return filtered;
+  }, [menuSearch, onlyHalal, onlyVegetarian, sortBy, sortOrder, restaurant]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredMenuItems.length / pageSize));
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
+  const paginatedMenuItems = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredMenuItems.slice(start, start + pageSize);
+  }, [filteredMenuItems, page, pageSize]);
+
+  const handleSortByChange = (event: SelectChangeEvent<SortBy>) => {
+    setSortBy(event.target.value as SortBy);
+    setPage(1);
+  };
+
+  const handleSortOrderChange = (event: SelectChangeEvent<SortOrder>) => {
+    setSortOrder(event.target.value as SortOrder);
+    setPage(1);
+  };
+
+  const handlePageSizeChange = (event: SelectChangeEvent<number>) => {
+    setPageSize(Number(event.target.value));
+    setPage(1);
+  };
 
   if (loading) return <CircularProgress />;
   if (error) return <Typography color="error">{error}</Typography>;
@@ -70,16 +138,76 @@ const RestaurantDetailPage: React.FC = () => {
       <TextField
         label="Search menu items"
         value={menuSearch}
-        onChange={(event) => setMenuSearch(event.target.value)}
+        onChange={(event) => {
+          setMenuSearch(event.target.value);
+          setPage(1);
+        }}
         placeholder="Try cake, pizza, salad..."
         fullWidth
         sx={{ mb: 2 }}
       />
 
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} mb={2}>
+        <FormControl fullWidth>
+          <InputLabel id="menu-sort-by-label">Sort by</InputLabel>
+          <Select
+            labelId="menu-sort-by-label"
+            label="Sort by"
+            value={sortBy}
+            onChange={handleSortByChange}
+          >
+            <MenuItem value="food_item">Name</MenuItem>
+            <MenuItem value="price">Price</MenuItem>
+          </Select>
+        </FormControl>
+
+        <FormControl fullWidth>
+          <InputLabel id="menu-sort-order-label">Sort order</InputLabel>
+          <Select
+            labelId="menu-sort-order-label"
+            label="Sort order"
+            value={sortOrder}
+            onChange={handleSortOrderChange}
+          >
+            <MenuItem value="asc">Ascending</MenuItem>
+            <MenuItem value="desc">Descending</MenuItem>
+          </Select>
+        </FormControl>
+
+        <FormControl fullWidth>
+          <InputLabel id="menu-page-size-label">Per page</InputLabel>
+          <Select
+            labelId="menu-page-size-label"
+            label="Per page"
+            value={pageSize}
+            onChange={handlePageSizeChange}
+          >
+            <MenuItem value={6}>6</MenuItem>
+            <MenuItem value={12}>12</MenuItem>
+            <MenuItem value={20}>20</MenuItem>
+          </Select>
+        </FormControl>
+      </Stack>
+
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} mb={2}>
+        <FormControlLabel
+          control={<Checkbox checked={onlyHalal} onChange={(e) => { setOnlyHalal(e.target.checked); setPage(1); }} />}
+          label="Halal only"
+        />
+        <FormControlLabel
+          control={<Checkbox checked={onlyVegetarian} onChange={(e) => { setOnlyVegetarian(e.target.checked); setPage(1); }} />}
+          label="Vegetarian only"
+        />
+      </Stack>
+
+      <Typography variant="body2" color="text.secondary" mb={2}>
+        Showing {paginatedMenuItems.length} of {filteredMenuItems.length} menu items
+      </Typography>
+
       {filteredMenuItems.length === 0 ? (
         <Typography>No menu items available</Typography>
       ) : (
-        filteredMenuItems.map((item, index) => (
+        paginatedMenuItems.map((item, index) => (
           <Card key={index} sx={{ mb: 1 }}>
             <CardContent>
               <Typography variant="h6">{item.food_item}</Typography>
@@ -89,6 +217,12 @@ const RestaurantDetailPage: React.FC = () => {
             </CardContent>
           </Card>
         ))
+      )}
+
+      {totalPages > 1 && (
+        <Stack direction="row" justifyContent="center" mt={3}>
+          <Pagination page={page} count={totalPages} onChange={(_, value) => setPage(value)} color="primary" />
+        </Stack>
       )}
     </Box>
   );
