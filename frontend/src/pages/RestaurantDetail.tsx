@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
-import { Typography, Box, CircularProgress, Divider, Card, CardContent, Button } from '@mui/material';
+import { Typography, Box, CircularProgress, Divider, Card, CardContent, Button, TextField } from '@mui/material';
 import api from '../api';
 interface MenuItem {
   food_item: string;
@@ -22,6 +22,8 @@ const RestaurantDetailPage: React.FC = () => {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [menuSearch, setMenuSearch] = useState('');
+
   useEffect(() => {
     const fetchRestaurant = async () => {
       try {
@@ -37,24 +39,45 @@ const RestaurantDetailPage: React.FC = () => {
   if (loading) return <CircularProgress />;
   if (error) return <Typography color="error">{error}</Typography>;
   if (!restaurant) return <Typography>Restaurant not found</Typography>;
+
+  const filteredMenuItems = useMemo(() => {
+    const query = menuSearch.trim().toLowerCase();
+    if (!query) {
+      return restaurant.menu_items;
+    }
+
+    return restaurant.menu_items.filter((item) => item.food_item.toLowerCase().includes(query));
+  }, [menuSearch, restaurant.menu_items]);
+
   return (
     <Box p={3}>
       <Box display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={1} mb={1}>
-        <Typography variant="h4">{restaurant.food_item}</Typography>
+        <Typography variant="h4">Restaurant {restaurant.id}</Typography>
         <Button variant="contained" component={RouterLink} to={`/order?restaurantId=${restaurant.id}`}>
           Start order here
         </Button>
       </Box>
+      <Typography variant="body1">Featured item: {restaurant.food_item}</Typography>
       <Typography variant="body1">Location: {restaurant.location}</Typography>
       <Typography variant="body1">Cuisine: {restaurant.cuisine_type}</Typography>
       <Typography variant="body1">Halal: {restaurant.is_halal ? 'Yes' : 'No'}</Typography>
       <Typography variant="body1">Vegetarian: {restaurant.is_vegetarian ? 'Yes' : 'No'}</Typography>
       <Divider sx={{ my: 3 }} />
       <Typography variant="h5" mb={2}>Menu</Typography>
-      {restaurant.menu_items.length === 0 ? (
+
+      <TextField
+        label="Search menu items"
+        value={menuSearch}
+        onChange={(event) => setMenuSearch(event.target.value)}
+        placeholder="Try cake, pizza, salad..."
+        fullWidth
+        sx={{ mb: 2 }}
+      />
+
+      {filteredMenuItems.length === 0 ? (
         <Typography>No menu items available</Typography>
       ) : (
-        restaurant.menu_items.map((item, index) => (
+        filteredMenuItems.map((item, index) => (
           <Card key={index} sx={{ mb: 1 }}>
             <CardContent>
               <Typography variant="h6">{item.food_item}</Typography>
