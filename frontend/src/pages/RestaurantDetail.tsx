@@ -36,18 +36,20 @@ const RestaurantDetailPage: React.FC = () => {
     };
     fetchRestaurant();
   }, [id]);
+
+  const filteredMenuItems = useMemo(() => {
+    const menuItems = restaurant?.menu_items ?? [];
+    const query = menuSearch.trim().toLowerCase();
+    if (!query) {
+      return menuItems;
+    }
+
+    return menuItems.filter((item) => item.food_item.toLowerCase().includes(query));
+  }, [menuSearch, restaurant]);
+
   if (loading) return <CircularProgress />;
   if (error) return <Typography color="error">{error}</Typography>;
   if (!restaurant) return <Typography>Restaurant not found</Typography>;
-
-  const filteredMenuItems = useMemo(() => {
-    const query = menuSearch.trim().toLowerCase();
-    if (!query) {
-      return restaurant.menu_items;
-    }
-
-    return restaurant.menu_items.filter((item) => item.food_item.toLowerCase().includes(query));
-  }, [menuSearch, restaurant.menu_items]);
 
   return (
     <Box p={3}>
