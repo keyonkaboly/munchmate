@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { TextField, Button, Box, Tabs, Tab, Alert } from '@mui/material';
-import api from '../api';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
+
 const AuthPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { register, login } = useAuth();
   const [tab, setTab] = useState(0);
   const [registerData, setRegisterData] = useState({ username: '', email: '', password: '', user_type: 'customer' });
   const [loginData, setLoginData] = useState({ email: '', password: '' });
@@ -16,26 +20,34 @@ const AuthPage: React.FC = () => {
     e.preventDefault();
     setError(''); setSuccess('');
     try {
-      await api.post(`/auth/register?role=${registerData.user_type}`, {
+      await register({
         username: registerData.username,
         email: registerData.email,
-        password: registerData.password
+        password: registerData.password,
+        role: registerData.user_type as 'customer' | 'restaurant_manager',
       });
-      setSuccess('Registration successful!');
-    } catch (err: any) {
-      setError(typeof err.response?.data?.detail === 'string' ? err.response.data.detail : 'Registration failed');
+      setSuccess('Registration successful! Please log in now.');
+      setTab(0);
+      setLoginData({ email: registerData.email, password: '' });
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setError(typeof detail === 'string' ? detail : 'Registration failed');
     }
   };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(''); setSuccess('');
     try {
-      await api.post('/auth/login', loginData);
-      setSuccess('Login successful!');
-    } catch (err: any) {
-      setError(typeof err.response?.data?.detail === 'string' ? err.response.data.detail : 'Login failed');
+      await login(loginData);
+      setSuccess('Login successful! Redirecting...');
+      navigate('/');
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setError(typeof detail === 'string' ? detail : 'Login failed');
     }
   };
+
   return (
     <Box maxWidth={400} mx="auto" mt={4}>
       <Tabs value={tab} onChange={handleTabChange} centered>

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Typography, Box, CircularProgress, Card, CardContent, Chip } from '@mui/material';
 import api from '../api';
+import { useAuth } from '../auth/AuthContext';
+
 interface Notification {
   id: number;
   order_id: string;
@@ -8,23 +10,33 @@ interface Notification {
   notification_type: string;
   is_read: boolean;
 }
+
 const NotificationsPage: React.FC = () => {
-  const customerId = 1;
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
   useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      setError('You must be logged in to view notifications');
+      return;
+    }
+
     const fetchNotifications = async () => {
       try {
-        const res = await api.get(`/notifications/history/${customerId}`);
+        const res = await api.get(`/notifications/history/${user.id}`);
         setNotifications(res.data.notifications || []);
-      } catch (err: any) {
+      } catch {
         setError('Failed to load notifications');
       }
       setLoading(false);
     };
+
     fetchNotifications();
-  }, []);
+  }, [user]);
+
   if (loading) return <CircularProgress />;
   if (error) return <Typography color="error">{error}</Typography>;
   return (
