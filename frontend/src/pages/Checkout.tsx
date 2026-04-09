@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import {
   Alert,
   Box,
@@ -15,8 +16,50 @@ import {
 } from '@mui/material';
 import api from '../api';
 import { useAuth } from '../auth/AuthContext';
+import { ACTIVE_ORDER_STORAGE_KEY } from '../customerSession';
 
-const ACTIVE_ORDER_KEY = 'munchmate_active_order_id';
+interface GroupedOrder {
+  order_id: string;
+  restaurant_id: number;
+}
+
+interface CustomerOrdersForNotify {
+  current_orders: GroupedOrder[];
+  past_orders: GroupedOrder[];
+}
+
+async function resolveRestaurantForOrder(orderId: string, customerId: number): Promise<number | null> {
+  try {
+    const res = await api.get<CustomerOrdersForNotify>(`/orders/customer/${customerId}`);
+    const all = [...(res.data.current_orders || []), ...(res.data.past_orders || [])];
+    return all.find((o) => o.order_id === orderId)?.restaurant_id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function firePostCheckoutNotifications(
+  orderId: string,
+  customerId: number,
+  restaurantId: number | null
+) {
+  const customerQs = new URLSearchParams({
+    order_id: orderId,
+    customer_id: String(customerId),
+  }).toString();
+  const tasks = [
+    api.post(`/notifications/order-confirmed?${customerQs}`),
+    api.post(`/notifications/delivery-status?${customerQs}`),
+  ];
+  if (restaurantId != null) {
+    const incomingQs = new URLSearchParams({
+      order_id: orderId,
+      restaurant_id: String(restaurantId),
+    }).toString();
+    tasks.push(api.post(`/notifications/incoming-order?${incomingQs}`));
+  }
+  await Promise.allSettled(tasks);
+}
 
 interface CheckoutTotals {
   order_id: string;
@@ -72,7 +115,7 @@ const extractApiErrorMessage = (err: unknown): string => {
 const CheckoutPage: React.FC = () => {
   const { user } = useAuth();
 
-  const [orderId, setOrderId] = useState(() => sessionStorage.getItem(ACTIVE_ORDER_KEY) ?? '');
+  const [orderId, setOrderId] = useState(() => sessionStorage.getItem(ACTIVE_ORDER_STORAGE_KEY) ?? '');
   const [cardNumber, setCardNumber] = useState('');
   const [totals, setTotals] = useState<CheckoutTotals | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
@@ -214,7 +257,11 @@ const CheckoutPage: React.FC = () => {
       setPaymentMessage(paymentRes.data.message);
 
       if (paymentRes.data.success) {
-        sessionStorage.removeItem(ACTIVE_ORDER_KEY);
+        sessionStorage.removeItem(ACTIVE_ORDER_STORAGE_KEY);
+        if (user?.id != null) {
+          const rid = await resolveRestaurantForOrder(orderId.trim(), user.id);
+          await firePostCheckoutNotifications(orderId.trim(), user.id, rid);
+        }
       } else {
         setError(paymentRes.data.message || 'Payment failed. Please try again.');
       }
@@ -263,6 +310,14 @@ const CheckoutPage: React.FC = () => {
       {paymentMessage && (
         <Alert severity={paymentSuccess ? 'success' : 'info'} sx={{ mb: 2 }}>
           {paymentMessage}
+          {paymentSuccess && (
+            <>
+              {' '}
+              <Button component={RouterLink} to="/notifications" size="small" sx={{ ml: 1 }}>
+                View notifications
+              </Button>
+            </>
+          )}
         </Alert>
       )}
 

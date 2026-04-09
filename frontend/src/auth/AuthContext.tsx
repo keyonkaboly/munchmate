@@ -1,5 +1,6 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import api from '../api';
+import { CUSTOMER_STORAGE_KEY, writeStoredCustomerId } from '../customerSession';
 
 interface AuthUser {
   id: number;
@@ -33,23 +34,39 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const refreshUser = useCallback(async () => {
     try {
       const response = await api.get<AuthUser>('/auth/me');
       setUser(response.data);
+      writeStoredCustomerId(response.data.id);
     } catch {
       setUser(null);
     }
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      setLoading(true);
+      await refreshUser();
+      if (!cancelled) setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshUser]);
+
   const register = useCallback(async (payload: RegisterPayload) => {
-    await api.post(`/auth/register?role=${payload.role}`, {
+    const res = await api.post<{ id?: number }>(`/auth/register?role=${payload.role}`, {
       username: payload.username,
       email: payload.email,
       password: payload.password,
     });
+    if (res.data?.id != null) {
+      writeStoredCustomerId(res.data.id);
+    }
   }, []);
 
   const login = useCallback(async (payload: LoginPayload) => {
@@ -62,6 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await api.post('/auth/logout');
     } finally {
       setUser(null);
+      sessionStorage.removeItem(CUSTOMER_STORAGE_KEY);
     }
   }, []);
 

@@ -6,8 +6,8 @@ import {
   Card, CardContent, Divider, Chip, Stack,
 } from '@mui/material';
 import api from '../api';
+import { ACTIVE_ORDER_STORAGE_KEY } from '../customerSession';
 
-const ACTIVE_ORDER_KEY = 'munchmate_active_order_id';
 const PAGE_FETCH_SIZE = 20;
 
 interface RestaurantListItem {
@@ -201,7 +201,7 @@ const OrderPage: React.FC = () => {
         food_items: cart,
       });
       const oid = res.data.combined_order_id ?? res.data.order_id ?? '';
-      sessionStorage.setItem(ACTIVE_ORDER_KEY, oid);
+      sessionStorage.setItem(ACTIVE_ORDER_STORAGE_KEY, oid);
       setSuccess(`Order created! ID: ${oid}`);
       setCart([]);
       await loadCustomerOrders();
@@ -250,7 +250,7 @@ const OrderPage: React.FC = () => {
   };
 
   const goToCheckout = (orderId: string) => {
-    sessionStorage.setItem(ACTIVE_ORDER_KEY, orderId);
+    sessionStorage.setItem(ACTIVE_ORDER_STORAGE_KEY, orderId);
     navigate('/checkout');
   };
 
