@@ -93,15 +93,33 @@ def get_menu_item(restaurant_id: int, food_item: str, db: Session = Depends(get_
     return response
 
 
+def require_restaurant_manager(current_user: Customer = Depends(get_current_user)):
+    if current_user.user_type != "restaurant_manager":
+        raise HTTPException(
+            status_code=403,
+            detail="Only restaurant managers can access this feature"
+        )
+    return current_user
+
+
 @router.put("/{restaurant_id}/menu-items/{food_item}")
-def rename_menu_item(restaurant_id: int, food_item: str, data: MenuItemNameUpdate, manager_user_id: int = Query(...), db: Session = Depends(get_db)):
-    manager = db.query(Customer).filter(Customer.id == manager_user_id).first()
-    if not manager or manager.user_type != "restaurant_manager":
-        raise HTTPException(status_code=403, detail="Only restaurant managers can perform this action")
+def rename_menu_item(
+    restaurant_id: int,
+    food_item: str,
+    data: MenuItemNameUpdate,
+    db: Session = Depends(get_db),
+    manager: Customer = Depends(require_restaurant_manager)
+):
 
     restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant ID not found")
+
+    if manager.restaurant_manager_restaurant_id is not None and manager.restaurant_manager_restaurant_id != restaurant_id:
+        raise HTTPException(
+            status_code=403,
+            detail="You can only manage your assigned restaurant menu"
+        )
 
     menu_item = db.query(MenuItem).filter(MenuItem.restaurant_id == restaurant_id, MenuItem.food_item == food_item).first()
 
@@ -118,13 +136,3 @@ def rename_menu_item(restaurant_id: int, food_item: str, data: MenuItemNameUpdat
     db.refresh(menu_item)
 
     return {"restaurant_id": restaurant_id, "food_item": menu_item.food_item}
-
-
-
-def require_restaurant_manager(current_user: Customer = Depends(get_current_user)):
-    if current_user.user_type != "restaurant_manager":
-        raise HTTPException(
-            status_code=403,
-            detail="Only restaurant managers can access this feature"
-        )
-    return current_user

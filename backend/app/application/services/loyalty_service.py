@@ -75,4 +75,4 @@ def apply_reward_to_order(db: Session, customer_id: int, order_id: str) -> dict 
     db.commit()
     db.refresh(customer)
 
-    return {"combined_order_id": order_id, "order_total": order_total, "discount_percent": MILESTONE_REWARD_PERCENT, "discount_amount": discount, "discounted_total": discounted_total}
+    return {"applied": True, "combined_order_id": order_id, "order_total": order_total, "discount_percent": MILESTONE_REWARD_PERCENT, "discount_amount": discount, "discounted_total": discounted_total}

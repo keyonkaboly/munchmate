@@ -339,7 +339,9 @@ def cancel_order_with_refund(order_id: str, db: Session = Depends(get_db)):
             detail="No successful payment on file; cancellation with refund is not available",
         )
 
-    refund_amount = round(float(payment.amount) * 0.5, 2)
+    order_total = round(sum(item.total_cost for item in items if item.total_cost), 2)
+    refund_base = round(order_total) if order_total > 0 else float(payment.amount)
+    refund_amount = round(refund_base * 0.5, 2)
 
     for item in items:
         item.status = "Canceled"
@@ -347,7 +349,7 @@ def cancel_order_with_refund(order_id: str, db: Session = Depends(get_db)):
     db.commit()
 
     return EarlyCancelRefundResponse(
-        message=f"Order {order_id} canceled; refund amount (50% of payment)",
+        message=f"Order {order_id} canceled; refund amount (50% of order total)",
         order_id=order_id,
         refund_amount=refund_amount,
     )
