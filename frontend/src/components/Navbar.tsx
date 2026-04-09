@@ -15,6 +15,7 @@ const Navbar: React.FC = () => {
         <Button color="inherit" component={Link} to="/">Restaurants</Button>
         <Button color="inherit" component={Link} to="/order">Order</Button>
         <Button color="inherit" component={Link} to="/checkout">Checkout</Button>
+        <Button color="inherit" component={Link} to="/delivery">Delivery</Button>
         <Button color="inherit" component={Link} to="/loyalty">Loyalty</Button>
         <Button color="inherit" component={Link} to="/notifications">Notifications</Button>
         {user?.user_type === 'restaurant_manager' && (
