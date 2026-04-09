@@ -12,6 +12,6 @@ Then run following below commands Keep in mind that you should navigate to local
 - docker info
 - cd /your/directorys/path/to/munchmate/cloned/repo
 - docker compose up -d --build
-- http://localhost:3000
-- http://localhost:8000/docs
+- http://localhost:3000 (Visit for frontend)
+- http://localhost:8000/docs (Visit for backend endpoints)
 
