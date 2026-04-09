@@ -5,23 +5,13 @@
 It should be noted we are using this dataset for food delivery information in our project: https://www.kaggle.com/datasets/niszarkiah/food-delivery.
 
 #### Docker Commands
-Ensure proper directory: cd .../munchmate
+Ensure proper directory: cd .../munchmate (or see later step)
 Then run following below commands Keep in mind that you should navigate to localhost:8000/docs (can change that in browser URL):
-#### Linux
+
 - docker context use default
-- docker compose up --build --no-deps -d backend
-- docker compose ps
-- curl http://localhost:8000/
-- docker compose exec backend bash
-
-- Then go to localhost:8000/docs, now everything will be seeded and ready.
-
-#### Windows
-Open Docker Desktop and ensure engine's running.
-- docker context ls
-- docker context use desktop-linux
 - docker info
-- docker compose up --build --no-deps -d backend
-- docker compose ps
-- curl http://localhost:8000/
-- Now navigate to http://localhost:8000/ / http://localhost:8000/docs to see.
+- cd /your/directorys/path/to/munchmate/cloned/repo
+- docker compose up -d --build
+- http://localhost:3000
+- http://localhost:8000/docs
+
