@@ -6,6 +6,8 @@ interface AuthUser {
   id: number;
   email: string;
   username: string;
+  user_type: 'customer' | 'restaurant_manager';
+  restaurant_manager_restaurant_id: number | null;
 }
 
 interface RegisterPayload {

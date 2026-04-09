@@ -93,7 +93,9 @@ def read_me(current_user: Customer = Depends(get_current_user)):
     return {
         "id": current_user.id,
         "email": current_user.email,
-        "username": current_user.username
+        "username": current_user.username,
+        "user_type": current_user.user_type,
+        "restaurant_manager_restaurant_id": current_user.restaurant_manager_restaurant_id,
     }
 
 @router_auth.post("/logout")

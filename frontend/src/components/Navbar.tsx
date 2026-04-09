@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 
 const Navbar: React.FC = () => {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
 
   return (
     <AppBar position="static">
@@ -17,6 +17,9 @@ const Navbar: React.FC = () => {
         <Button color="inherit" component={Link} to="/checkout">Checkout</Button>
         <Button color="inherit" component={Link} to="/loyalty">Loyalty</Button>
         <Button color="inherit" component={Link} to="/notifications">Notifications</Button>
+        {user?.user_type === 'restaurant_manager' && (
+          <Button color="inherit" component={Link} to="/admin">Admin</Button>
+        )}
         <Button
           color="inherit"
           onClick={async () => {

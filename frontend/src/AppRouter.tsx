@@ -9,6 +9,7 @@ import OrderPage from './pages/Order';
 import CheckoutPage from './pages/Checkout';
 import NotificationsPage from './pages/Notifications';
 import LoyaltyPage from './pages/Loyalty';
+import AdminPage from './pages/Admin';
 import { useAuth } from './auth/AuthContext';
 
 const RequireAuth: React.FC<{ isAuthenticated: boolean }> = ({ isAuthenticated }) => {
@@ -47,6 +48,7 @@ const AppRouter: React.FC = () => {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/loyalty" element={<LoyaltyPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/admin" element={<AdminPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to={isAuthenticated ? '/' : '/auth'} replace />} />
